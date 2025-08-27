@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Quiz</title>
+  <link rel="preconnect" href="https://images.unsplash.com" />
+  <link rel="preconnect" href="https://picsum.photos" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <header class="header">
+      <h1 class="title">Image Quiz</h1>
+      <div class="progress" aria-label="progress">
+        <div id="progress-bar" class="progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"></div>
+        <span id="progress-text" class="progress__text">Question 1 / 10</span>
+      </div>
+    </header>
+
+    <section class="quiz" id="quiz" aria-labelledby="prompt-label">
+      <div class="prompt">
+        <h2 id="prompt-label" class="sr-only">Question prompt</h2>
+        <img id="prompt-image" alt="Question image" />
+      </div>
+
+      <div class="choices" role="list" aria-label="Choose the matching image">
+        <!-- Buttons injected by JS -->
+      </div>
+
+      <div class="nav">
+        <button id="prev-btn" class="btn btn-secondary" type="button" aria-label="Previous question">Previous</button>
+        <button id="next-btn" class="btn" type="button" aria-label="Next question">Next</button>
+      </div>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <h2>Your score</h2>
+      <p id="score-text"></p>
+      <button id="restart-btn" class="btn">Restart quiz</button>
+    </section>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
+
+

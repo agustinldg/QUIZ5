@@ -179,7 +179,7 @@ function renderQuestion() {
     });
     choicesEl.appendChild(btn);
   });
-}
+}  
 
 function onChoose(index) {
   state.selections[state.currentIndex] = index;

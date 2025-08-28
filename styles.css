@@ -197,41 +197,138 @@ body::before {
   100% { color: var(--accent); }
 }
 
+/* Caption styles - redesigned for better visibility */
+.caption {
+  font-size: clamp(16px, 2.8vw, 22px);
+  color: var(--text);
+  text-align: center;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--panel), var(--accent-2));
+  border-radius: 12px;
+  border: 3px solid var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 100%;
+  word-wrap: break-word;
+  position: relative;
+  z-index: 2;
+}
+
+.prompt .caption {
+  font-size: clamp(18px, 3.2vw, 24px);
+  margin-top: 16px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  border-color: var(--accent);
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .choice-btn {
-  display: block;
-  background: linear-gradient(135deg, #0b0e1a, #1a1f3a);
-  border: 4px solid rgba(255,255,255,.15);
-  border-radius: 25px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   padding: 0;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all 200ms ease;
-  overflow: hidden;
-  width: clamp(180px, 28vw, 320px); /* Larger for iPad landscape */
-  height: clamp(180px, 28vw, 320px); /* Square aspect ratio */
+  transition: all 0.3s ease;
+  width: clamp(160px, 25vw, 280px);
+  height: auto;
+  min-height: clamp(160px, 25vw, 280px);
+}
+
+.choice-btn img {
+  width: 100%;
+  height: clamp(160px, 25vw, 280px);
+  object-fit: cover;
+  border-radius: 16px;
+  border: 4px solid var(--accent-2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.choice-btn .caption {
+  font-size: clamp(14px, 2.2vw, 18px);
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border-color: var(--accent-2);
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.choice-btn:hover img {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.choice-btn:hover .caption {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: white;
+  transform: translateY(-2px);
+}
+
+.choice-btn.selected img {
+  border-color: var(--accent);
+  border-width: 5px;
+  box-shadow: 0 0 0 5px var(--accent) inset, 0 0 25px var(--accent);
+  transform: scale(1.02);
+}
+
+.choice-btn.selected .caption {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Ensure choices container has proper spacing */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(160px, 25vw, 280px), 1fr));
+  gap: 25px;
+  margin: 20px 0;
+  justify-items: center;
+  align-items: start;
+}
+
+/* Prompt section redesign */
+.prompt {
+  text-align: center;
+  margin-bottom: 30px;
   position: relative;
 }
 
-.choice-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
-  transition: left 0.5s ease;
+.prompt img {
+  width: clamp(300px, 50vw, 500px);
+  height: auto;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 5px solid var(--accent);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.choice-btn:hover::before {
-  left: 100%;
+.prompt img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
 }
 
-.choice-btn:focus-visible { outline: 4px solid var(--accent); outline-offset: 4px; }
-.choice-btn:hover { 
-  transform: translateY(-8px) scale(1.05); 
-  box-shadow: 0 15px 35px rgba(0,0,0,.4); 
-  border-color: rgba(255,255,255,.3);
+.prompt img:active {
+  transform: scale(0.98);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
+
 .choice-btn[disabled] { opacity: 0.7; cursor: not-allowed; }
 .choice-btn.correct { 
   box-shadow: 0 0 0 5px var(--success) inset, 0 0 30px rgba(81, 207, 102, 0.6);
@@ -266,15 +363,6 @@ body::before {
 @keyframes selectedGlow {
   0% { box-shadow: 0 0 0 8px var(--accent) inset, 0 0 35px rgba(255, 107, 157, 0.6); }
   100% { box-shadow: 0 0 0 8px var(--accent) inset, 0 0 45px rgba(255, 107, 157, 0.8); }
-}
-
-.choice-btn img { 
-  width: 100%; 
-  height: 100%; 
-  aspect-ratio: 1/1; 
-  object-fit: cover; 
-  display: block;
-  border-radius: 21px;
 }
 
 .btn {
@@ -440,6 +528,56 @@ body::before {
     padding: 14px 24px;
     font-size: 18px;
     min-height: 55px;
+  }
+}
+
+/* Tablet optimization for captions */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .caption {
+    font-size: clamp(18px, 3vw, 24px);
+    margin-top: 14px;
+    padding: 14px 18px;
+  }
+  
+  .prompt .caption {
+    font-size: clamp(20px, 3.5vw, 26px);
+    margin-top: 18px;
+    padding: 16px 22px;
+  }
+  
+  .choice-btn .caption {
+    font-size: clamp(16px, 2.5vw, 20px);
+    margin-top: 12px;
+    padding: 12px 16px;
+  }
+  
+  .choices {
+    gap: 30px;
+  }
+}
+
+/* iPad Landscape optimization for captions */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .caption {
+    font-size: clamp(20px, 3.5vw, 28px);
+    margin-top: 16px;
+    padding: 16px 20px;
+  }
+  
+  .prompt .caption {
+    font-size: clamp(22px, 4vw, 30px);
+    margin-top: 20px;
+    padding: 18px 24px;
+  }
+  
+  .choice-btn .caption {
+    font-size: clamp(18px, 3vw, 24px);
+    margin-top: 14px;
+    padding: 14px 18px;
+  }
+  
+  .choices {
+    gap: 35px;
   }
 }
 

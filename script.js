@@ -1,18 +1,14 @@
 "use strict";
 
 /**
- * Image Quiz
- * - 10 questions
+ * Image Quiz with Captions
+ * - 10 questions with descriptive captions
  * - Each question has: prompt image, 3 answer images (one correct)
+ * - Click images to hear their captions via speech synthesis
  * - Keyboard accessible (1/2/3 to select, Enter to continue when locked)
  */
 
-/**
- * Replace these URLs with your own JPGs as desired.
- * Using picsum (randomized) and unsplash (stable-ish) placeholders by default.
- */
 const quizData = [
-  // Each item: { prompt: 'url.jpg', choices: ['a.jpg','b.jpg','c.jpg'], correctIndex: 0-2 }
   {
     prompt: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop",
     choices: [
@@ -20,7 +16,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 2
+    correctIndex: 2,
+    captions: {
+      prompt: "A beautiful coastal landscape with dramatic cliffs and ocean waves",
+      choices: [
+        "A serene mountain lake reflecting the sky",
+        "A tropical beach with palm trees and turquoise water",
+        "A beautiful coastal landscape with dramatic cliffs and ocean waves"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
@@ -29,7 +33,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A majestic mountain peak covered in snow and clouds",
+      choices: [
+        "A majestic mountain peak covered in snow and clouds",
+        "A dense forest with tall trees and green foliage",
+        "A peaceful river flowing through a valley"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=1200&auto=format&fit=crop",
@@ -38,7 +50,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 1
+    correctIndex: 1,
+    captions: {
+      prompt: "A vibrant city skyline at sunset with modern buildings",
+      choices: [
+        "A colorful garden with blooming flowers",
+        "A vibrant city skyline at sunset with modern buildings",
+        "A peaceful countryside with rolling hills"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
@@ -47,7 +67,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 2
+    correctIndex: 2,
+    captions: {
+      prompt: "A stunning mountain range with peaks reaching the clouds",
+      choices: [
+        "A beautiful sunset over the ocean",
+        "A cozy cabin in the woods",
+        "A stunning mountain range with peaks reaching the clouds"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
@@ -56,7 +84,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A pristine tropical beach with crystal clear water",
+      choices: [
+        "A pristine tropical beach with crystal clear water",
+        "A dramatic coastal landscape with rocky cliffs",
+        "A lush rainforest with dense vegetation"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=1200&auto=format&fit=crop",
@@ -65,7 +101,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A peaceful river winding through a green valley",
+      choices: [
+        "A peaceful river winding through a green valley",
+        "A colorful autumn forest with orange leaves",
+        "A serene lake surrounded by mountains"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop",
@@ -74,7 +118,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A colorful autumn forest with golden leaves",
+      choices: [
+        "A colorful autumn forest with golden leaves",
+        "A rustic wooden cabin in the mountains",
+        "A modern cityscape with skyscrapers"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1200&auto=format&fit=crop",
@@ -83,7 +135,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A serene lake reflecting the mountains and sky",
+      choices: [
+        "A serene lake reflecting the mountains and sky",
+        "A peaceful mountain lake with clear water",
+        "A beautiful sunset over the ocean"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=1200&auto=format&fit=crop",
@@ -92,7 +152,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A cozy wooden cabin nestled in the forest",
+      choices: [
+        "A cozy wooden cabin nestled in the forest",
+        "A colorful garden with blooming flowers",
+        "A peaceful river flowing through the valley"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop",
@@ -101,7 +169,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 1
+    correctIndex: 1,
+    captions: {
+      prompt: "A beautiful sunset over the ocean horizon",
+      choices: [
+        "A peaceful countryside with rolling hills",
+        "A beautiful sunset over the ocean horizon",
+        "A lush rainforest with dense vegetation"
+      ]
+    }
   },
   {
     prompt: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&auto=format&fit=crop",
@@ -110,7 +186,15 @@ const quizData = [
       "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop"
     ],
-    correctIndex: 0
+    correctIndex: 0,
+    captions: {
+      prompt: "A stunning sunset over the ocean with golden clouds",
+      choices: [
+        "A stunning sunset over the ocean with golden clouds",
+        "A serene lake reflecting the mountains",
+        "A pristine tropical beach with clear water"
+      ]
+    }
   }
 ];
 
@@ -144,13 +228,29 @@ function renderQuestion() {
 
   updateProgress();
 
+  // Update the existing prompt image
   promptImageEl.src = question.prompt;
+  promptImageEl.alt = 'Question image';
   promptImageEl.onload = () => { /* noop visual */ };
   promptImageEl.onerror = () => { promptImageEl.alt = "Failed to load question image"; };
+  
+  // Click handler for question image - reads the caption
   promptImageEl.onclick = () => {
-    const label = getFileName(question.prompt);
-    speakNow(`This is the question number ${state.currentIndex + 1} ${label}`);
+    const caption = question.captions.prompt;
+    speakNow(caption);
   };
+  
+  // Remove any existing caption
+  const existingCaption = promptImageEl.parentElement.querySelector('.caption');
+  if (existingCaption) {
+    existingCaption.remove();
+  }
+  
+  // Add caption below question image
+  const promptCaption = document.createElement('div');
+  promptCaption.className = 'caption';
+  promptCaption.textContent = question.captions.prompt;
+  promptImageEl.parentElement.appendChild(promptCaption);
 
   // Clear previous choices
   choicesEl.innerHTML = "";
@@ -169,17 +269,27 @@ function renderQuestion() {
     img.onerror = () => { img.alt = "Image failed to load"; };
 
     btn.appendChild(img);
+    
+    // Add caption below each answer choice
+    const choiceCaption = document.createElement('div');
+    choiceCaption.className = 'caption';
+    choiceCaption.textContent = question.captions.choices[idx];
+    btn.appendChild(choiceCaption);
+    
     if (state.selections[state.currentIndex] === idx) {
       btn.classList.add("selected");
     }
+    
+    // Click handler for answer choices - reads the caption
     btn.addEventListener("click", () => {
-      const label = getFileName(src);
-      speakNow(`This is the answer number ${idx + 1} ${label}`);
+      const caption = question.captions.choices[idx];
+      speakNow(caption);
       onChoose(idx);
     });
+    
     choicesEl.appendChild(btn);
   });
-}  
+}
 
 function onChoose(index) {
   state.selections[state.currentIndex] = index;
@@ -232,7 +342,7 @@ restartBtn.addEventListener("click", restart);
 prevBtn.addEventListener("click", prevQuestion);
 nextBtn.addEventListener("click", nextQuestion);
 
-// Keyboard shortcuts: 1/2/3 to select
+// Keyboard shortcuts: 1/2/3 to select, Enter to continue, Arrow keys to navigate
 document.addEventListener("keydown", (e) => {
   if (resultsEl.hidden === false) return; // ignore on results
   const mapping = { "1": 0, "2": 1, "3": 2 };
@@ -261,11 +371,6 @@ function preloadForIndex(i) {
   preload([q.prompt, ...q.choices]);
 }
 
-// Initial render
-renderQuestion();
-preloadForIndex(0);
-preloadForIndex(1);
-
 // Speech utilities
 function speakNow(text) {
   try {
@@ -291,5 +396,10 @@ function getFileName(url) {
     return url.split('/').pop() || 'image';
   }
 }
+
+// Initial render
+renderQuestion();
+preloadForIndex(0);
+preloadForIndex(1);
 
 

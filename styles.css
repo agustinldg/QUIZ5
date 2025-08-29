@@ -690,6 +690,63 @@ body::before {
   }
 }
 
+/* Tablet landscape optimization for quiz split layout */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .app {
+    padding: 10px 10px 10px;
+    max-width: 1100px;
+  }
+  .header {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+  }
+  .title {
+    font-size: 32px;
+  }
+  .quiz {
+    padding: 12px 10px;
+  }
+  .quiz-flex {
+    gap: 18px;
+  }
+  .prompt-col {
+    max-width: 380px;
+    min-width: 220px;
+  }
+  .choices-col {
+    max-width: 220px;
+    min-width: 140px;
+  }
+  .prompt img {
+    width: clamp(220px, 32vw, 340px);
+    border-radius: 14px;
+    border-width: 4px;
+  }
+  .choice-btn {
+    max-width: 140px;
+    min-width: 100px;
+  }
+  .choice-btn img {
+    border-radius: 10px;
+    border-width: 2px;
+  }
+  .btn {
+    padding: 12px 18px;
+    font-size: 16px;
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .caption {
+    font-size: 15px;
+    padding: 8px 10px;
+  }
+  .prompt .caption {
+    font-size: 16px;
+    padding: 10px 12px;
+    width: clamp(180px, 32vw, 320px);
+  }
+}
+
 /* Layout for left-right split */
 .quiz-flex {
   display: flex;

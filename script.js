@@ -5,7 +5,7 @@
  * - 10 questions with descriptive captions
  * - Each question has: prompt image, 3 answer images (one correct)
  * - Click images to hear their captions via speech synthesis
- * - Keyboard accessible (1/2/3 to select, Enter to continue when locked)
+ * - Keyboard accessible (1/2/3 to select, Enter to continue when locked) 
  */
 
 const quizData = [

@@ -228,29 +228,20 @@ function renderQuestion() {
 
   updateProgress();
 
-  // Update the existing prompt image
-  promptImageEl.src = question.prompt;
-  promptImageEl.alt = 'Question image';
-  promptImageEl.onload = () => { /* noop visual */ };
-  promptImageEl.onerror = () => { promptImageEl.alt = "Failed to load question image"; };
-  
-  // Click handler for question image - reads the caption
-  promptImageEl.onclick = () => {
-    const caption = question.captions.prompt;
-    speakNow(caption);
-  };
-  
-  // Remove any existing caption
-  const existingCaption = promptImageEl.parentElement.querySelector('.caption');
-  if (existingCaption) {
-    existingCaption.remove();
+  // Update the prompt image and caption inside the button
+  const promptBtn = document.getElementById('prompt-btn');
+  const promptCaption = document.getElementById('prompt-caption');
+  if (promptBtn && promptCaption) {
+    promptImageEl.src = question.prompt;
+    promptImageEl.alt = 'Question image';
+    promptImageEl.onload = () => { /* noop visual */ };
+    promptImageEl.onerror = () => { promptImageEl.alt = "Failed to load question image"; };
+    promptCaption.textContent = question.captions.prompt;
+    // Click handler for both image and caption (button click)
+    promptBtn.onclick = () => {
+      speakNow(question.captions.prompt);
+    };
   }
-  
-  // Add caption below question image
-  const promptCaption = document.createElement('div');
-  promptCaption.className = 'caption';
-  promptCaption.textContent = question.captions.prompt;
-  promptImageEl.parentElement.appendChild(promptCaption);
 
   // Clear previous choices
   choicesEl.innerHTML = "";

@@ -336,12 +336,13 @@ body::before {
 }
 
 .prompt img {
-  width: clamp(300px, 50vw, 500px);
+  width: 100%;
+  max-width: min(500px, 90%);
   height: auto;
   aspect-ratio: 16/9;
   object-fit: cover;
-  border-radius: 20px;
-  border: 5px solid var(--accent);
+  border-radius: clamp(12px, 2vw, 20px);
+  border: clamp(3px, 0.5vw, 5px) solid var(--accent);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   cursor: pointer;
@@ -358,17 +359,18 @@ body::before {
 }
 
 .prompt .caption {
-  font-size: clamp(18px, 3.2vw, 24px);
-  margin-top: 16px;
-  padding: 14px 20px;
+  font-size: clamp(16px, 2.5vw, 24px);
+  margin-top: clamp(12px, 2vw, 16px);
+  padding: clamp(10px, 1.5vw, 20px);
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
   border-color: var(--accent);
   font-weight: 700;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  width: clamp(300px, 50vw, 500px);
+  width: 100%;
+  max-width: min(500px, 90%);
   box-sizing: border-box;
-  border-radius: 20px;
+  border-radius: clamp(12px, 2vw, 20px);
 }
 
 /* Navigation buttons with arrows */
@@ -757,28 +759,29 @@ body::before {
 .quiz-flex {
   display: flex;
   flex-direction: row;
-  gap: 40px;
-  align-items: flex-start;
-  justify-content: center;
+  gap: clamp(20px, 4vw, 40px);
+  align-items: stretch;
+  justify-content: space-between;
   width: 100%;
+  height: 100%;
 }
 .prompt-col {
-  flex: 1 1 50%;
-  min-width: 320px;
+  flex: 1 1 55%;
+  min-width: 0;
   max-width: 600px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100%;
 }
 .choices-col {
-  flex: 1 1 40%;
-  min-width: 220px;
-  max-width: 400px;
+  flex: 1 1 45%;
+  min-width: 0;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  justify-content: center;
 }
 .choices {
   display: grid;
@@ -798,14 +801,16 @@ body::before {
   height: auto;
   aspect-ratio: 16/9;
   object-fit: cover;
-  border-radius: 16px;
-  border: 4px solid var(--accent-2);
+  border-radius: clamp(10px, 1.5vw, 16px);
+  border: clamp(2px, 0.4vw, 4px) solid var(--accent-2);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
 .choice-btn .caption {
-  margin-top: 10px;
+  margin-top: clamp(8px, 1.5vw, 10px);
   margin-bottom: 0;
+  font-size: clamp(12px, 1.8vw, 16px);
+  padding: clamp(8px, 1.2vw, 14px);
 }
 @media (max-width: 900px) {
   .quiz-flex {

@@ -769,6 +769,8 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 100%;
 }
 .choices-col {
   flex: 1 1 40%;
@@ -779,16 +781,16 @@ body::before {
   align-items: stretch;
 }
 .choices {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   margin: 0;
-  justify-content: flex-start;
-  align-items: stretch;
+  justify-content: center;
+  align-items: start;
 }
 .choice-btn {
   width: 100%;
-  max-width: 340px;
+  max-width: 300px;
   margin: 0 auto;
 }
 .choice-btn img {
@@ -815,6 +817,7 @@ body::before {
     min-width: 0;
   }
   .choices {
+    grid-template-columns: 1fr;
     gap: 18px;
   }
 }

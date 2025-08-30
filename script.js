@@ -8,195 +8,8 @@
  * - Keyboard accessible (1/2/3 to select, Enter to continue when locked) 
  */
 
-const quizData = [
-  {
-    prompt: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 2,
-    captions: {
-      prompt: "A beautiful coastal landscape with dramatic cliffs and ocean waves",
-      choices: [
-        "A serene mountain lake reflecting the sky",
-        "A tropical beach with palm trees and turquoise water",
-        "A beautiful coastal landscape with dramatic cliffs and ocean waves"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A majestic mountain peak covered in snow and clouds",
-      choices: [
-        "A majestic mountain peak covered in snow and clouds",
-        "A dense forest with tall trees and green foliage",
-        "A peaceful river flowing through a valley"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 1,
-    captions: {
-      prompt: "A vibrant city skyline at sunset with modern buildings",
-      choices: [
-        "A colorful garden with blooming flowers",
-        "A vibrant city skyline at sunset with modern buildings",
-        "A peaceful countryside with rolling hills"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 2,
-    captions: {
-      prompt: "A stunning mountain range with peaks reaching the clouds",
-      choices: [
-        "A beautiful sunset over the ocean",
-        "A cozy cabin in the woods",
-        "A stunning mountain range with peaks reaching the clouds"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A pristine tropical beach with crystal clear water",
-      choices: [
-        "A pristine tropical beach with crystal clear water",
-        "A dramatic coastal landscape with rocky cliffs",
-        "A lush rainforest with dense vegetation"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A peaceful river winding through a green valley",
-      choices: [
-        "A peaceful river winding through a green valley",
-        "A colorful autumn forest with orange leaves",
-        "A serene lake surrounded by mountains"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A colorful autumn forest with golden leaves",
-      choices: [
-        "A colorful autumn forest with golden leaves",
-        "A rustic wooden cabin in the mountains",
-        "A modern cityscape with skyscrapers"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A serene lake reflecting the mountains and sky",
-      choices: [
-        "A serene lake reflecting the mountains and sky",
-        "A peaceful mountain lake with clear water",
-        "A beautiful sunset over the ocean"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1517817748490-58b28e49ae80?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A cozy wooden cabin nestled in the forest",
-      choices: [
-        "A cozy wooden cabin nestled in the forest",
-        "A colorful garden with blooming flowers",
-        "A peaceful river flowing through the valley"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 1,
-    captions: {
-      prompt: "A beautiful sunset over the ocean horizon",
-      choices: [
-        "A peaceful countryside with rolling hills",
-        "A beautiful sunset over the ocean horizon",
-        "A lush rainforest with dense vegetation"
-      ]
-    }
-  },
-  {
-    prompt: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&auto=format&fit=crop",
-    choices: [
-      "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop"
-    ],
-    correctIndex: 0,
-    captions: {
-      prompt: "A stunning sunset over the ocean with golden clouds",
-      choices: [
-        "A stunning sunset over the ocean with golden clouds",
-        "A serene lake reflecting the mountains",
-        "A pristine tropical beach with clear water"
-      ]
-    }
-  }
-];
+// Quiz data will be loaded from JSON file
+let quizData = [];
 
 const state = {
   currentIndex: 0,
@@ -232,21 +45,21 @@ function renderQuestion() {
   const promptBtn = document.getElementById('prompt-btn');
   const promptCaption = document.getElementById('prompt-caption');
   if (promptBtn && promptCaption) {
-    promptImageEl.src = question.prompt;
+    promptImageEl.src = question.prompt.imageBase64;
     promptImageEl.alt = 'Question image';
     promptImageEl.onload = () => { /* noop visual */ };
     promptImageEl.onerror = () => { promptImageEl.alt = "Failed to load question image"; };
-    promptCaption.textContent = question.captions.prompt;
+    promptCaption.textContent = question.prompt.caption;
     // Click handler for both image and caption (button click)
     promptBtn.onclick = () => {
-      speakNow(question.captions.prompt);
+      speakNow(question.prompt.caption);
     };
   }
 
   // Clear previous choices
   choicesEl.innerHTML = "";
 
-  question.choices.forEach((src, idx) => {
+  question.choices.forEach((choice, idx) => {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
     btn.type = "button";
@@ -254,7 +67,7 @@ function renderQuestion() {
     btn.setAttribute("aria-label", `choice ${idx + 1}`);
 
     const img = document.createElement("img");
-    img.src = src;
+    img.src = choice.imageBase64;
     img.alt = `Answer option ${idx + 1}`;
     img.loading = "eager";
     img.onerror = () => { img.alt = "Image failed to load"; };
@@ -264,7 +77,7 @@ function renderQuestion() {
     // Add caption below each answer choice
     const choiceCaption = document.createElement('div');
     choiceCaption.className = 'caption';
-    choiceCaption.textContent = question.captions.choices[idx];
+    choiceCaption.textContent = choice.caption;
     btn.appendChild(choiceCaption);
     
     if (state.selections[state.currentIndex] === idx) {
@@ -273,7 +86,7 @@ function renderQuestion() {
     
     // Click handler for answer choices - reads the caption
     btn.addEventListener("click", () => {
-      const caption = question.captions.choices[idx];
+      const caption = choice.caption;
       speakNow(caption);
       onChoose(idx);
     });
@@ -308,7 +121,10 @@ function showResults() {
   // Calculate score from selections
   let score = 0;
   state.selections.forEach((sel, i) => {
-    if (sel === quizData[i].correctIndex) score += 1;
+    // Find the correct answer by matching the correctAnswerId
+    const question = quizData[i];
+    const correctChoiceIndex = question.choices.findIndex(choice => choice.id === question.correctAnswerId);
+    if (sel === correctChoiceIndex) score += 1;
   });
   state.score = score;
 
@@ -359,7 +175,9 @@ function preload(urls) {
 function preloadForIndex(i) {
   if (i < 0 || i >= quizData.length) return;
   const q = quizData[i];
-  preload([q.prompt, ...q.choices]);
+  // For base64 images, we don't need to preload since they're already in memory
+  // But we can still call the function for consistency
+  preload([q.prompt.imageBase64, ...q.choices.map(choice => choice.imageBase64)]);
 }
 
 // Speech utilities
@@ -388,9 +206,34 @@ function getFileName(url) {
   }
 }
 
-// Initial render
-renderQuestion();
-preloadForIndex(0);
-preloadForIndex(1);
+// Load quiz data from base64 JSON file
+async function loadQuizData() {
+  try {
+    const response = await fetch('quiz-data-base64.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    quizData = data.questions;
+    
+    // Initialize the quiz after data is loaded
+    renderQuestion();
+    preloadForIndex(0);
+    preloadForIndex(1);
+  } catch (error) {
+    console.error('Error loading quiz data:', error);
+    // Fallback to a simple error message
+    document.getElementById('quiz').innerHTML = `
+      <div style="text-align: center; padding: 50px; color: white;">
+        <h2>Error Loading Quiz</h2>
+        <p>Could not load quiz data. Please check if quiz-data-base64.json exists.</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+// Start the app by loading quiz data
+loadQuizData();
 
 

@@ -453,60 +453,7 @@ function quickTest() {
   }
 }
 
-/**
- * Get the latest generated quiz file
- */
-function getLatestQuizFile() {
-  const files = DriveApp.getFilesByName('quiz-data-*.json');
-  let latestFile = null;
-  let latestDate = new Date(0);
-  
-  while (files.hasNext()) {
-    const file = files.next();
-    const fileDate = file.getDateCreated();
-    if (fileDate > latestDate) {
-      latestDate = fileDate;
-      latestFile = file;
-    }
-  }
-  
-  if (latestFile) {
-    console.log(`Latest quiz file: ${latestFile.getName()}`);
-    console.log(`Created: ${latestFile.getDateCreated()}`);
-    console.log(`URL: ${latestFile.getUrl()}`);
-    return latestFile;
-  } else {
-    console.log('No quiz files found');
-    return null;
-  }
-}
 
-/**
- * Clean up old quiz files (keep only the latest 5)
- */
-function cleanupOldQuizFiles() {
-  const files = DriveApp.getFilesByName('quiz-data-*.json');
-  const fileList = [];
-  
-  while (files.hasNext()) {
-    fileList.push(files.next());
-  }
-  
-  // Sort by creation date (newest first)
-  fileList.sort((a, b) => b.getDateCreated() - a.getDateCreated());
-  
-  // Keep only the latest 5 files
-  if (fileList.length > 5) {
-    for (let i = 5; i < fileList.length; i++) {
-      const file = fileList[i];
-      console.log(`Deleting old file: ${file.getName()}`);
-      file.setTrashed(true);
-    }
-    console.log(`Cleaned up ${fileList.length - 5} old files`);
-  } else {
-    console.log('No cleanup needed');
-  }
-}
 
 /**
  * Diagnostic function to check what's in a specific cell

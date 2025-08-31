@@ -668,11 +668,46 @@ function testServiceUrl() {
 }
 
 // Function to generate and download PDF results
-function downloadResults() {
+async function downloadResults() {
+  console.log('Starting PDF generation...');
   try {
     // Create new PDF document
+    if (!window.jspdf) {
+      throw new Error('jsPDF library not loaded');
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    
+    // Helper function to add image to PDF with optional effects
+    async function addImageToPDF(base64Data, x, y, width, height, options = {}) {
+      try {
+        if (base64Data && base64Data.startsWith('data:image')) {
+          await doc.addImage(base64Data, 'JPEG', x, y, width, height);
+          
+          // Add green border for correct answers
+          if (options.correct) {
+            doc.setDrawColor(0, 128, 0); // Green
+            doc.setLineWidth(2);
+            doc.rect(x - 1, y - 1, width + 2, height + 2);
+          }
+          
+          // Add diagonal lines for incorrect answers
+          if (options.incorrect) {
+            doc.setDrawColor(255, 0, 0); // Red
+            doc.setLineWidth(1);
+            // Diagonal line from top-left to bottom-right
+            doc.line(x, y, x + width, y + height);
+            // Diagonal line from top-right to bottom-left
+            doc.line(x + width, y, x, y + height);
+          }
+          
+          // Reset line width
+          doc.setLineWidth(0.1);
+        }
+      } catch (error) {
+        console.log('Error adding image to PDF:', error);
+      }
+    }
     
     // Set up document properties
     doc.setProperties({
@@ -703,14 +738,71 @@ function downloadResults() {
     const pageHeight = 280;
     const lineHeight = 8;
     
+    // Helper function to calculate space needed for a question
+    function calculateQuestionSpace(question, selection, questionIndex) {
+      console.log('calculateQuestionSpace called with:', { question, selection, questionIndex });
+      let space = 0;
+      
+      // Separator line (if not first question)
+      if (questionIndex > 0) space += 10;
+      
+      // Question number and prompt
+      space += lineHeight;
+      
+      // Question image
+      space += 35; // Space for larger image
+      
+      // User answer
+      space += 20;
+      
+      // Correct/Incorrect indicator
+      space += lineHeight;
+      
+      // If incorrect or unanswered, add correct answer
+      let isCorrect = false;
+      if (selection !== null && question.choices[selection]) {
+        console.log('Checking correctness for selection:', selection, 'choices:', question.choices);
+        if (question.shuffledData) {
+          console.log('Using shuffled data');
+          isCorrect = question.shuffledData.choices[selection].id === question.shuffledData.choices[question.shuffledData.correctIndex].id;
+        } else {
+          console.log('Using original data');
+          const correctChoiceIndex = question.choices.findIndex(choice => choice.id === question.correctAnswerId);
+          isCorrect = question.choices[selection].id === question.choices[correctChoiceIndex].id;
+        }
+      }
+      
+      if (!isCorrect) {
+        space += 20; // Space for correct answer image and text
+      }
+      
+      // Separator line at end
+      space += 15;
+      
+      return space;
+    }
+    
     // Process each question
-    state.selections.forEach((selection, index) => {
+    console.log(`Processing ${state.selections.length} questions...`);
+    for (let index = 0; index < state.selections.length; index++) {
+      const selection = state.selections[index];
       const question = quizData[index];
+      console.log(`Processing question ${index + 1}...`);
+      
+      // Calculate space needed for this question
+      console.log(`Question ${index + 1} - Selection:`, selection, 'Question:', question);
+      const spaceNeeded = calculateQuestionSpace(question, selection, index);
       
       // Check if we need a new page
-      if (yPosition > pageHeight) {
+      if (yPosition + spaceNeeded > pageHeight) {
         doc.addPage();
         yPosition = 20;
+      }
+      
+      // Add separator line before each question (except the first one)
+      if (index > 0) {
+        doc.line(20, yPosition - 5, 190, yPosition - 5);
+        yPosition += 10; // Add extra space after separator
       }
       
       // Question number and prompt
@@ -719,10 +811,19 @@ function downloadResults() {
       doc.text(`Pregunta ${index + 1}:`, 20, yPosition);
       yPosition += lineHeight;
       
+      // Add question image (larger than answer images)
+      if (question.prompt.imageBase64) {
+        try {
+          await addImageToPDF(question.prompt.imageBase64, 20, yPosition, 40, 30);
+        } catch (error) {
+          console.log('Error adding question image:', error);
+        }
+      }
+      
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Pregunta: ${question.prompt.caption}`, 20, yPosition);
-      yPosition += lineHeight;
+      doc.text(`Pregunta: ${question.prompt.caption}`, 70, yPosition + 10);
+      yPosition += 35; // More space for larger image
       
       // Get the correct answer and user's answer considering shuffled data
       let correctChoiceIndex, correctChoice, userChoice;
@@ -731,41 +832,89 @@ function downloadResults() {
         // Use shuffled data
         correctChoiceIndex = question.shuffledData.correctIndex;
         correctChoice = question.shuffledData.choices[correctChoiceIndex];
-        userChoice = selection !== null ? question.shuffledData.choices[selection] : null;
+        userChoice = selection !== null && question.shuffledData.choices[selection] ? question.shuffledData.choices[selection] : null;
       } else {
         // Fallback to original data (shouldn't happen but just in case)
         correctChoiceIndex = question.choices.findIndex(choice => choice.id === question.correctAnswerId);
         correctChoice = question.choices[correctChoiceIndex];
-        userChoice = selection !== null ? question.choices[selection] : null;
+        userChoice = selection !== null && question.choices[selection] ? question.choices[selection] : null;
       }
       
-      // Display user's answer
+      // Display user's answer with images
       if (userChoice) {
-        doc.text(`Tu respuesta: ${userChoice.caption}`, 20, yPosition);
-        yPosition += lineHeight;
-        
         // Check if correct (comparing the actual choice IDs, not indices)
-        const isCorrect = userChoice && userChoice.id === correctChoice.id;
+        const isCorrect = userChoice.id === correctChoice.id;
+        
+        // Add user's answer image with visual effects
+        if (userChoice.imageBase64) {
+          try {
+            await addImageToPDF(userChoice.imageBase64, 20, yPosition, 25, 15, {
+              correct: isCorrect,
+              incorrect: !isCorrect
+            });
+          } catch (error) {
+            console.log('Error adding user answer image:', error);
+          }
+        }
+        
+        if (isCorrect) {
+          doc.setTextColor(0, 128, 0); // Green
+        } else {
+          doc.setTextColor(255, 0, 0); // Red
+        }
+        doc.text(`Tu respuesta: ${userChoice.caption}`, 50, yPosition + 5);
+        doc.setTextColor(0, 0, 0); // Reset to black
+        yPosition += 20;
+        
         if (isCorrect) {
           doc.setTextColor(0, 128, 0); // Green
           doc.text('✅ Correcta', 20, yPosition);
         } else {
           doc.setTextColor(255, 0, 0); // Red
           doc.text('❌ Incorrecta', 20, yPosition);
-          doc.text(`Respuesta correcta: ${correctChoice.caption}`, 20, yPosition + lineHeight);
           yPosition += lineHeight;
+          
+          // Add correct answer image with green border
+          if (correctChoice.imageBase64) {
+            try {
+              await addImageToPDF(correctChoice.imageBase64, 20, yPosition, 25, 15, {
+                correct: true
+              });
+            } catch (error) {
+              console.log('Error adding correct answer image:', error);
+            }
+          }
+          doc.setTextColor(0, 128, 0); // Green
+          doc.text(`Respuesta correcta: ${correctChoice.caption}`, 50, yPosition + 5);
+          doc.setTextColor(0, 0, 0); // Reset to black
+          yPosition += 20;
         }
         doc.setTextColor(0, 0, 0); // Reset to black
       } else {
-        doc.setTextColor(128, 128, 128); // Gray
+        doc.setTextColor(255, 0, 0); // Red
         doc.text('❓ Sin responder', 20, yPosition);
         yPosition += lineHeight;
-        doc.text(`Respuesta correcta: ${correctChoice.caption}`, 20, yPosition);
+        
+        // Add correct answer image for unanswered questions with green border
+        if (correctChoice.imageBase64) {
+          try {
+            await addImageToPDF(correctChoice.imageBase64, 20, yPosition, 25, 15, {
+              correct: true
+            });
+          } catch (error) {
+            console.log('Error adding correct answer image:', error);
+          }
+        }
+        doc.setTextColor(0, 128, 0); // Green
+        doc.text(`Respuesta correcta: ${correctChoice.caption}`, 50, yPosition + 5);
         doc.setTextColor(0, 0, 0); // Reset to black
+        yPosition += 20;
       }
       
-      yPosition += lineHeight * 2; // Add extra space between questions
-    });
+      // Add separator line at the end of each question
+      doc.line(20, yPosition + 5, 190, yPosition + 5);
+      yPosition += 15; // Add extra space after separator
+    }
     
     // Add summary
     if (yPosition > pageHeight - 30) {
@@ -804,6 +953,7 @@ function downloadResults() {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `resultados_quiz_${dateStr}.pdf`;
     
+    console.log('Saving PDF...');
     // Save the PDF
     doc.save(filename);
     

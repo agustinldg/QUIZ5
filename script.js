@@ -36,6 +36,16 @@ function updateProgress() {
   nextBtn.textContent = state.currentIndex === quizData.length - 1 ? "Finish" : "Next";
 }
 
+// Shuffle array using Fisher-Yates algorithm
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function renderQuestion() {
   const question = quizData[state.currentIndex];
 
@@ -59,7 +69,21 @@ function renderQuestion() {
   // Clear previous choices
   choicesEl.innerHTML = "";
 
-  question.choices.forEach((choice, idx) => {
+  // Shuffle the choices for this question
+  const shuffledChoices = shuffleArray(question.choices);
+  
+  // Find the correct answer ID in the shuffled array
+  const correctChoiceIndex = shuffledChoices.findIndex(choice => choice.id === question.correctAnswerId);
+  
+  // Store the shuffled choices and correct index for this question
+  if (!question.shuffledData) {
+    question.shuffledData = {
+      choices: shuffledChoices,
+      correctIndex: correctChoiceIndex
+    };
+  }
+
+  question.shuffledData.choices.forEach((choice, idx) => {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
     btn.type = "button";
@@ -121,9 +145,10 @@ function showResults() {
   // Calculate score from selections
   let score = 0;
   state.selections.forEach((sel, i) => {
-    // Find the correct answer by matching the correctAnswerId
     const question = quizData[i];
-    const correctChoiceIndex = question.choices.findIndex(choice => choice.id === question.correctAnswerId);
+    // Use the shuffled correct index if available, otherwise fall back to original
+    const correctChoiceIndex = question.shuffledData ? question.shuffledData.correctIndex : 
+      question.choices.findIndex(choice => choice.id === question.correctAnswerId);
     if (sel === correctChoiceIndex) score += 1;
   });
   state.score = score;
@@ -140,6 +165,12 @@ function restart() {
   state.currentIndex = 0;
   state.selections = Array.from({ length: quizData.length }, () => null);
   state.score = 0;
+  // Clear shuffled data to get new random order
+  quizData.forEach(question => {
+    if (question.shuffledData) {
+      delete question.shuffledData;
+    }
+  });
   resultsEl.hidden = true;
   document.getElementById("quiz").hidden = false;
   renderQuestion();

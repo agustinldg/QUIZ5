@@ -450,7 +450,7 @@ function urlToBase64(imageUrl) {
     // Fetch the image
     const response = UrlFetchApp.fetch(imageUrl, {
       muteHttpExceptions: true,
-      timeout: 30
+      timeout: 90
     });
     
     const responseCode = response.getResponseCode();

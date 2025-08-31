@@ -222,10 +222,28 @@ async function loadQuizData() {
       const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
       console.log('Google service response:', response);
       
-      if (response && response.success && response.quizData) {
-        // Use the quiz data directly from the service
-        data = response.quizData;
-        console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+      if (response && response.success) {
+        if (response.quizData) {
+          // New format: quiz data directly in response
+          data = response.quizData;
+          console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+        } else if (response.fileUrl) {
+          // Old format: need to download file from Google Drive
+          console.log('Service returned file URL, downloading...');
+          const directUrl = convertGoogleDriveUrl(response.fileUrl);
+          console.log(`Downloading from: ${directUrl}`);
+          
+          const jsonResponse = await fetch(directUrl);
+          if (!jsonResponse.ok) {
+            throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+          }
+          data = await jsonResponse.json();
+          console.log(`✅ Loaded quiz data from Google Drive: ${response.questionsCount} questions`);
+        } else {
+          const errorMsg = 'Service returned success but no quiz data or file URL';
+          console.error('Google service error details:', response);
+          throw new Error(`Google service failed: ${errorMsg}`);
+        }
       } else {
         const errorMsg = response ? (response.error || 'Unknown error') : 'No response from service';
         console.error('Google service error details:', response);
@@ -310,6 +328,17 @@ function fetchGoogleService(url) {
 
 
 
+// Convert Google Drive URL to direct download URL
+function convertGoogleDriveUrl(url) {
+  // Extract file ID from Google Drive URL
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+  if (match) {
+    const fileId = match[1];
+    // Return direct download URL
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  }
+  return url; // Return original URL if no match
+}
 
 // Fallback function to load local data
 async function loadLocalData() {

@@ -724,22 +724,28 @@ function downloadResults() {
       doc.text(`Pregunta: ${question.prompt.caption}`, 20, yPosition);
       yPosition += lineHeight;
       
-      // Get the correct answer
-      const correctChoiceIndex = question.shuffledData ? question.shuffledData.correctIndex : 
-        question.choices.findIndex(choice => choice.id === question.correctAnswerId);
-      const correctChoice = question.choices[correctChoiceIndex];
+      // Get the correct answer and user's answer considering shuffled data
+      let correctChoiceIndex, correctChoice, userChoice;
       
-      // User's answer
-      const userChoice = selection !== null ? question.shuffledData ? 
-        question.shuffledData.choices[selection] : question.choices[selection] : null;
+      if (question.shuffledData) {
+        // Use shuffled data
+        correctChoiceIndex = question.shuffledData.correctIndex;
+        correctChoice = question.shuffledData.choices[correctChoiceIndex];
+        userChoice = selection !== null ? question.shuffledData.choices[selection] : null;
+      } else {
+        // Fallback to original data (shouldn't happen but just in case)
+        correctChoiceIndex = question.choices.findIndex(choice => choice.id === question.correctAnswerId);
+        correctChoice = question.choices[correctChoiceIndex];
+        userChoice = selection !== null ? question.choices[selection] : null;
+      }
       
       // Display user's answer
       if (userChoice) {
         doc.text(`Tu respuesta: ${userChoice.caption}`, 20, yPosition);
         yPosition += lineHeight;
         
-        // Check if correct
-        const isCorrect = selection === correctChoiceIndex;
+        // Check if correct (comparing the actual choice IDs, not indices)
+        const isCorrect = userChoice && userChoice.id === correctChoice.id;
         if (isCorrect) {
           doc.setTextColor(0, 128, 0); // Green
           doc.text('✅ Correcta', 20, yPosition);
@@ -752,7 +758,9 @@ function downloadResults() {
         doc.setTextColor(0, 0, 0); // Reset to black
       } else {
         doc.setTextColor(128, 128, 128); // Gray
-        doc.text('Sin responder', 20, yPosition);
+        doc.text('❓ Sin responder', 20, yPosition);
+        yPosition += lineHeight;
+        doc.text(`Respuesta correcta: ${correctChoice.caption}`, 20, yPosition);
         doc.setTextColor(0, 0, 0); // Reset to black
       }
       
@@ -779,7 +787,14 @@ function downloadResults() {
     yPosition += lineHeight;
     doc.text(`Respuestas correctas: ${state.score}`, 20, yPosition);
     yPosition += lineHeight;
-    doc.text(`Respuestas incorrectas: ${quizData.length - state.score}`, 20, yPosition);
+    
+    // Calculate unanswered questions
+    const unansweredCount = state.selections.filter(selection => selection === null).length;
+    const incorrectCount = quizData.length - state.score - unansweredCount;
+    
+    doc.text(`Respuestas incorrectas: ${incorrectCount}`, 20, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Preguntas sin responder: ${unansweredCount}`, 20, yPosition);
     yPosition += lineHeight;
     
     const percentage = Math.round((state.score / quizData.length) * 100);

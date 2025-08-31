@@ -207,7 +207,7 @@ function getFileName(url) {
 }
 
 // Configuration for Google service
-const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbxglFHz0MtUXUcEufyUBKcyWfLHFaSIU5LE6pxrL0b_w7fK2zR1NImNmWdQ1G4SWCt7/exec'; // Add your deployed service URL here
+const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbwwsmzXoo6lh0oiItUVTP0PsrC5Y2r253DQ6Ez-TQbKl75YVqLYAPWMYiq9Si0DIzJJ/exec';
 
 // Load quiz data from Google service or local file
 async function loadQuizData() {
@@ -218,21 +218,68 @@ async function loadQuizData() {
     if (GOOGLE_SERVICE_URL) {
       console.log('Loading quiz data from Google service...');
       
-      // Use JSONP approach to avoid CORS issues
-      const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
-      if (response.success && response.fileUrl) {
-        // Convert Google Drive URL to direct download URL
-        const directUrl = convertGoogleDriveUrl(response.fileUrl);
-        console.log(`Downloading from: ${directUrl}`);
-        
-        const jsonResponse = await fetch(directUrl);
-        if (!jsonResponse.ok) {
-          throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+      try {
+        // Try direct fetch first
+        const response = await fetch(GOOGLE_SERVICE_URL);
+        if (!response.ok) {
+          throw new Error(`Google service error! status: ${response.status}`);
         }
-        data = await jsonResponse.json();
-        console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
-      } else {
-        throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
+        const serviceResult = await response.json();
+        
+        if (serviceResult.success && serviceResult.fileUrl) {
+          // Convert Google Drive URL to direct download URL
+          const directUrl = convertGoogleDriveUrl(serviceResult.fileUrl);
+          console.log(`Downloading from: ${directUrl}`);
+          
+          const jsonResponse = await fetch(directUrl);
+          if (!jsonResponse.ok) {
+            throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+          }
+          data = await jsonResponse.json();
+          console.log(`✅ Loaded quiz data from Google service: ${serviceResult.questionsCount} questions`);
+        } else {
+          throw new Error(`Google service failed: ${serviceResult.error || 'Unknown error'}`);
+        }
+      } catch (corsError) {
+        console.log('CORS error, trying CORS proxy...');
+        
+        try {
+          // Try CORS proxy
+          const response = await fetchWithCorsProxy(GOOGLE_SERVICE_URL);
+          if (response.success && response.fileUrl) {
+            // Convert Google Drive URL to direct download URL
+            const directUrl = convertGoogleDriveUrl(response.fileUrl);
+            console.log(`Downloading from: ${directUrl}`);
+            
+            const jsonResponse = await fetch(directUrl);
+            if (!jsonResponse.ok) {
+              throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+            }
+            data = await jsonResponse.json();
+            console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+          } else {
+            throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
+          }
+        } catch (proxyError) {
+          console.log('CORS proxy failed, trying JSONP...');
+          
+          // Final fallback to JSONP
+          const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
+          if (response.success && response.fileUrl) {
+            // Convert Google Drive URL to direct download URL
+            const directUrl = convertGoogleDriveUrl(response.fileUrl);
+            console.log(`Downloading from: ${directUrl}`);
+            
+            const jsonResponse = await fetch(directUrl);
+            if (!jsonResponse.ok) {
+              throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+            }
+            data = await jsonResponse.json();
+            console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+          } else {
+            throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
+          }
+        }
       }
     } else {
       // Fallback to local file
@@ -308,6 +355,13 @@ function fetchGoogleService(url) {
   });
 }
 
+// Alternative: Use CORS proxy
+async function fetchWithCorsProxy(url) {
+  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+  const response = await fetch(proxyUrl + url);
+  return response.json();
+}
+
 // Convert Google Drive URL to direct download URL
 function convertGoogleDriveUrl(url) {
   // Extract file ID from Google Drive URL
@@ -346,6 +400,42 @@ async function loadLocalData() {
         <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Reload Page</button>
       </div>
     `;
+  }
+}
+
+// Test function to debug Google service
+async function testGoogleService() {
+  console.log('🧪 Testing Google service...');
+  console.log('Service URL:', GOOGLE_SERVICE_URL);
+  
+  try {
+    // Test 1: Direct fetch
+    console.log('Testing direct fetch...');
+    const response = await fetch(GOOGLE_SERVICE_URL);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    const data = await response.json();
+    console.log('Response data:', data);
+  } catch (error) {
+    console.log('Direct fetch failed:', error.message);
+  }
+  
+  try {
+    // Test 2: CORS proxy
+    console.log('Testing CORS proxy...');
+    const data = await fetchWithCorsProxy(GOOGLE_SERVICE_URL);
+    console.log('CORS proxy data:', data);
+  } catch (error) {
+    console.log('CORS proxy failed:', error.message);
+  }
+  
+  try {
+    // Test 3: JSONP
+    console.log('Testing JSONP...');
+    const data = await fetchGoogleService(GOOGLE_SERVICE_URL);
+    console.log('JSONP data:', data);
+  } catch (error) {
+    console.log('JSONP failed:', error.message);
   }
 }
 

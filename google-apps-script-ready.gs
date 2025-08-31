@@ -74,25 +74,15 @@ function generateQuizJSON() {
     // Convert to JSON string
     const jsonString = JSON.stringify(quizData, null, 2);
     
-    // Create a file in Google Drive
-    const fileName = `quiz-data-${new Date().toISOString().split('T')[0]}.json`;
-    const file = DriveApp.createFile(fileName, jsonString, MimeType.PLAIN_TEXT);
-    
-    // Make the file publicly accessible
-    file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
-    
     console.log(`✅ Quiz JSON generated successfully!`);
-    console.log(`📁 File: ${fileName}`);
-    console.log(`🔗 File ID: ${file.getId()}`);
     console.log(`📊 Questions processed: ${questions.length}`);
     
-    // Return the file URL for easy access
+    // Return the quiz data directly instead of creating a file
     return {
       success: true,
-      fileId: file.getId(),
-      fileName: fileName,
-      fileUrl: file.getUrl(),
-      questionsCount: questions.length
+      quizData: quizData,
+      questionsCount: questions.length,
+      generatedAt: new Date().toISOString()
     };
     
   } catch (error) {

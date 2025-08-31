@@ -220,16 +220,9 @@ async function loadQuizData() {
       
       // Use JSONP approach directly since it works
       const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
-      if (response.success && response.fileUrl) {
-        // Convert Google Drive URL to direct download URL
-        const directUrl = convertGoogleDriveUrl(response.fileUrl);
-        console.log(`Downloading from: ${directUrl}`);
-        
-        const jsonResponse = await fetch(directUrl);
-        if (!jsonResponse.ok) {
-          throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
-        }
-        data = await jsonResponse.json();
+      if (response.success && response.quizData) {
+        // Use the quiz data directly from the service
+        data = response.quizData;
         console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
       } else {
         throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
@@ -310,17 +303,7 @@ function fetchGoogleService(url) {
 
 
 
-// Convert Google Drive URL to direct download URL
-function convertGoogleDriveUrl(url) {
-  // Extract file ID from Google Drive URL
-  const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
-  if (match) {
-    const fileId = match[1];
-    // Return direct download URL
-    return `https://drive.google.com/uc?export=download&id=${fileId}`;
-  }
-  return url; // Return original URL if no match
-}
+
 
 // Fallback function to load local data
 async function loadLocalData() {

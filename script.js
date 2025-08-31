@@ -290,14 +290,14 @@ function fetchGoogleService(url) {
     // Add script to page
     document.head.appendChild(script);
     
-    // Timeout after 10 seconds
+    // Timeout after 30 seconds (increased for image processing)
     setTimeout(() => {
       if (window[callbackName]) {
         document.head.removeChild(script);
         delete window[callbackName];
         reject(new Error('Google service timeout'));
       }
-    }, 10000);
+    }, 30000);
   });
 }
 

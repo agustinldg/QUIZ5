@@ -26,6 +26,7 @@ const SPREADSHEET_ID = ''; // Leave empty to use active spreadsheet, or add your
 function generateQuizJSON() {
   try {
     console.log('Starting quiz JSON generation...');
+    const startTime = new Date();
     
     // Get the spreadsheet and sheet
     const spreadsheet = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
@@ -49,7 +50,11 @@ function generateQuizJSON() {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[0]) { // Skip empty rows
+        console.log(`Processing question ${i}...`);
+        const questionStartTime = new Date();
         const question = processQuestionRow(row, i, sheet);
+        const questionEndTime = new Date();
+        console.log(`Question ${i} processed in ${questionEndTime - questionStartTime}ms`);
         if (question) {
           questions.push(question);
         }
@@ -74,15 +79,20 @@ function generateQuizJSON() {
     // Convert to JSON string
     const jsonString = JSON.stringify(quizData, null, 2);
     
+    const endTime = new Date();
+    const totalTime = endTime - startTime;
+    
     console.log(`✅ Quiz JSON generated successfully!`);
     console.log(`📊 Questions processed: ${questions.length}`);
+    console.log(`⏱️ Total processing time: ${totalTime}ms`);
     
     // Return the quiz data directly instead of creating a file
     return {
       success: true,
       quizData: quizData,
       questionsCount: questions.length,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      processingTime: totalTime
     };
     
   } catch (error) {
@@ -398,6 +408,49 @@ function testQuizGeneration() {
   const result = generateQuizJSON();
   console.log('Test result:', result);
   return result;
+}
+
+/**
+ * Quick test function without image processing
+ */
+function quickTest() {
+  console.log('🧪 Quick test without image processing...');
+  const startTime = new Date();
+  
+  try {
+    // Get the spreadsheet and sheet
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+    }
+    
+    // Get all data from the sheet
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    
+    console.log(`Found ${data.length - 1} questions in the sheet`);
+    console.log(`Headers: ${headers.join(', ')}`);
+    
+    const endTime = new Date();
+    const totalTime = endTime - startTime;
+    
+    console.log(`✅ Quick test completed in ${totalTime}ms`);
+    return {
+      success: true,
+      questionsFound: data.length - 1,
+      headers: headers,
+      processingTime: totalTime
+    };
+    
+  } catch (error) {
+    console.error('❌ Quick test failed:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }
 
 /**

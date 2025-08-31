@@ -418,15 +418,15 @@ function fetchGoogleService(url) {
     // Add script to page
     document.head.appendChild(script);
     
-    // Timeout after 30 seconds (increased for image processing)
+    // Timeout after 90 seconds (increased for image processing)
     setTimeout(() => {
       if (window[callbackName]) {
         document.head.removeChild(script);
         delete window[callbackName];
         console.error('JSONP timeout - script URL:', script.src);
-        reject(new Error('Google service timeout after 30 seconds'));
+        reject(new Error('Google service timeout after 90 seconds'));
       }
-    }, 30000);
+    }, 90000);
   });
 }
 
@@ -559,8 +559,8 @@ function showCountdownTimer() {
   overlay.appendChild(container);
   document.body.appendChild(overlay);
   
-  // Start countdown from 30 seconds
-  let timeLeft = 30;
+  // Start countdown from 90 seconds
+  let timeLeft = 90;
   countdownDisplay.textContent = `${timeLeft}s`;
   
   const countdownInterval = setInterval(() => {

@@ -140,7 +140,8 @@ function generateCacheFileName(spreadsheet, sheet) {
  * Generate cache key based on sheet modification time
  */
 function generateCacheKey(spreadsheet, sheet) {
-  const lastModified = sheet.getLastModified();
+  // Use DriveApp to get the actual file's last modified time
+  const lastModified = DriveApp.getFileById(spreadsheet.getId()).getLastUpdated();
   return `${spreadsheet.getId()}_${sheet.getSheetId()}_${lastModified.getTime()}`;
 }
 
@@ -168,7 +169,7 @@ function checkCache(spreadsheet, sheet, cacheFileName) {
     
     // Check if cache file is newer than sheet modification
     const cacheLastModified = cacheFile.getLastUpdated();
-    const sheetLastModified = sheet.getLastModified();
+    const sheetLastModified = DriveApp.getFileById(spreadsheet.getId()).getLastUpdated();
     
     console.log(`📅 Cache file modified: ${cacheLastModified}`);
     console.log(`📅 Sheet modified: ${sheetLastModified}`);
@@ -223,7 +224,7 @@ function saveToCache(quizData, cacheFileName) {
       console.log(`📝 Updated existing cache file: ${cacheFile.getName()}`);
     } else {
       // Create new file
-      cacheFile = parentFolder.createFile(cacheFileName, jsonString, MimeType.JSON);
+      cacheFile = parentFolder.createFile(cacheFileName, jsonString, 'application/json');
       console.log(`📝 Created new cache file: ${cacheFile.getName()}`);
     }
     
@@ -743,7 +744,7 @@ function getCacheStatus() {
     // Look for cache file in the same folder
     const cacheFiles = parentFolder.getFilesByName(cacheFileName);
     
-    const sheetLastModified = sheet.getLastModified();
+    const sheetLastModified = DriveApp.getFileById(spreadsheet.getId()).getLastUpdated();
     
     if (cacheFiles.hasNext()) {
       const cacheFile = cacheFiles.next();

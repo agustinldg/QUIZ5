@@ -180,19 +180,112 @@ function preloadForIndex(i) {
   preload([q.prompt.imageBase64, ...q.choices.map(choice => choice.imageBase64)]);
 }
 
+// Voice selection configuration
+let selectedVoice = null;
+let selectedLanguage = 'es-ES';
+
 // Speech utilities
 function speakNow(text) {
   try {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1.0;
+    
+    // Use selected voice or find best available
+    if (selectedVoice) {
+      utter.voice = selectedVoice;
+      utter.lang = selectedVoice.lang;
+      console.log(`Using selected voice: ${selectedVoice.name}`);
+    } else {
+      // Default to Spanish
+      utter.lang = selectedLanguage;
+      const voices = window.speechSynthesis.getVoices();
+      const defaultVoice = voices.find(voice => 
+        voice.lang.startsWith('es') || 
+        voice.name.toLowerCase().includes('spanish') ||
+        voice.name.toLowerCase().includes('español')
+      );
+      
+      if (defaultVoice) {
+        utter.voice = defaultVoice;
+        console.log(`Using default Spanish voice: ${defaultVoice.name}`);
+      } else {
+        console.log('No Spanish voice found, using system default');
+      }
+    }
+    
+    // Voice settings
+    utter.rate = 0.9;
     utter.pitch = 1.0;
     utter.volume = 1.0;
+    
     window.speechSynthesis.speak(utter);
   } catch (e) {
-    // ignore
+    console.error('Speech synthesis error:', e);
   }
+}
+
+// Function to show available voices
+function showAvailableVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  console.log('🎤 Available voices:');
+  
+  // Group voices by language
+  const voiceGroups = {};
+  voices.forEach(voice => {
+    const lang = voice.lang.split('-')[0];
+    if (!voiceGroups[lang]) voiceGroups[lang] = [];
+    voiceGroups[lang].push(voice);
+  });
+  
+  // Display grouped voices
+  Object.keys(voiceGroups).forEach(lang => {
+    console.log(`\n${lang.toUpperCase()} voices:`);
+    voiceGroups[lang].forEach(voice => {
+      console.log(`  - ${voice.name} (${voice.lang})`);
+    });
+  });
+  
+  return voices;
+}
+
+// Function to select a specific voice
+function selectVoice(voiceName) {
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.name === voiceName);
+  
+  if (voice) {
+    selectedVoice = voice;
+    selectedLanguage = voice.lang;
+    console.log(`✅ Selected voice: ${voice.name} (${voice.lang})`);
+    return true;
+  } else {
+    console.log(`❌ Voice "${voiceName}" not found`);
+    return false;
+  }
+}
+
+// Function to select voice by language
+function selectVoiceByLanguage(languageCode) {
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v => v.lang.startsWith(languageCode));
+  
+  if (voice) {
+    selectedVoice = voice;
+    selectedLanguage = voice.lang;
+    console.log(`✅ Selected ${languageCode} voice: ${voice.name}`);
+    return true;
+  } else {
+    console.log(`❌ No voice found for language: ${languageCode}`);
+    return false;
+  }
+}
+
+// Function to reset to default Spanish voice
+function resetToDefaultVoice() {
+  selectedVoice = null;
+  selectedLanguage = 'es-ES';
+  console.log('🔄 Reset to default Spanish voice');
 }
 
 function getFileName(url) {
@@ -218,36 +311,48 @@ async function loadQuizData() {
     if (GOOGLE_SERVICE_URL) {
       console.log('Loading quiz data from Google service...');
       
-      // Use JSONP approach directly since it works
-      const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
-      console.log('Google service response:', response);
+      // Show countdown timer
+      const countdownEl = showCountdownTimer();
       
-      if (response && response.success) {
-        if (response.quizData) {
-          // New format: quiz data directly in response
-          data = response.quizData;
-          console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
-        } else if (response.fileUrl) {
-          // Old format: need to download file from Google Drive
-          console.log('Service returned file URL, downloading...');
-          const directUrl = convertGoogleDriveUrl(response.fileUrl);
-          console.log(`Downloading from: ${directUrl}`);
-          
-          const jsonResponse = await fetch(directUrl);
-          if (!jsonResponse.ok) {
-            throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+      try {
+        // Use JSONP approach directly since it works
+        const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
+        console.log('Google service response:', response);
+        
+        // Hide countdown timer
+        hideCountdownTimer();
+        
+        if (response && response.success) {
+          if (response.quizData) {
+            // New format: quiz data directly in response
+            data = response.quizData;
+            console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+          } else if (response.fileUrl) {
+            // Old format: need to download file from Google Drive
+            console.log('Service returned file URL, downloading...');
+            const directUrl = convertGoogleDriveUrl(response.fileUrl);
+            console.log(`Downloading from: ${directUrl}`);
+            
+            const jsonResponse = await fetch(directUrl);
+            if (!jsonResponse.ok) {
+              throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+            }
+            data = await jsonResponse.json();
+            console.log(`✅ Loaded quiz data from Google Drive: ${response.questionsCount} questions`);
+          } else {
+            const errorMsg = 'Service returned success but no quiz data or file URL';
+            console.error('Google service error details:', response);
+            throw new Error(`Google service failed: ${errorMsg}`);
           }
-          data = await jsonResponse.json();
-          console.log(`✅ Loaded quiz data from Google Drive: ${response.questionsCount} questions`);
         } else {
-          const errorMsg = 'Service returned success but no quiz data or file URL';
+          const errorMsg = response ? (response.error || 'Unknown error') : 'No response from service';
           console.error('Google service error details:', response);
           throw new Error(`Google service failed: ${errorMsg}`);
         }
-      } else {
-        const errorMsg = response ? (response.error || 'Unknown error') : 'No response from service';
-        console.error('Google service error details:', response);
-        throw new Error(`Google service failed: ${errorMsg}`);
+      } catch (error) {
+        // Hide countdown timer on error
+        hideCountdownTimer();
+        throw error;
       }
     } else {
       // Fallback to local file
@@ -383,6 +488,108 @@ async function testGoogleService() {
   } catch (error) {
     console.log('JSONP failed:', error.message);
     throw error;
+  }
+}
+
+// Show countdown timer while service is responding
+function showCountdownTimer() {
+  // Create countdown overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'countdown-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    font-family: 'Comic Sans MS', cursive;
+  `;
+  
+  // Create countdown container
+  const container = document.createElement('div');
+  container.style.cssText = `
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 3px solid #fff;
+  `;
+  
+  // Create title
+  const title = document.createElement('h2');
+  title.textContent = '🔄 Loading Quiz Data...';
+  title.style.cssText = `
+    color: white;
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  `;
+  
+  // Create countdown display
+  const countdownDisplay = document.createElement('div');
+  countdownDisplay.id = 'countdown-display';
+  countdownDisplay.style.cssText = `
+    color: white;
+    font-size: 48px;
+    font-weight: bold;
+    margin: 20px 0;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  `;
+  
+  // Create message
+  const message = document.createElement('p');
+  message.textContent = 'Please wait while we process your images...';
+  message.style.cssText = `
+    color: white;
+    margin: 10px 0 0 0;
+    font-size: 16px;
+    opacity: 0.9;
+  `;
+  
+  // Assemble the countdown
+  container.appendChild(title);
+  container.appendChild(countdownDisplay);
+  container.appendChild(message);
+  overlay.appendChild(container);
+  document.body.appendChild(overlay);
+  
+  // Start countdown from 30 seconds
+  let timeLeft = 30;
+  countdownDisplay.textContent = `${timeLeft}s`;
+  
+  const countdownInterval = setInterval(() => {
+    timeLeft--;
+    countdownDisplay.textContent = `${timeLeft}s`;
+    
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+  
+  // Store interval ID for cleanup
+  overlay.dataset.intervalId = countdownInterval;
+  
+  return overlay;
+}
+
+// Hide countdown timer
+function hideCountdownTimer() {
+  const overlay = document.getElementById('countdown-overlay');
+  if (overlay) {
+    // Clear the interval
+    const intervalId = overlay.dataset.intervalId;
+    if (intervalId) {
+      clearInterval(parseInt(intervalId));
+    }
+    
+    // Remove the overlay
+    document.body.removeChild(overlay);
   }
 }
 

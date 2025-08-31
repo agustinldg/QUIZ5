@@ -207,7 +207,7 @@ function getFileName(url) {
 }
 
 // Configuration for Google service
-const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbwrZ7LUdGTExkr5B06GiPPquQS8-YXvCkw7vrWT1Rc/dev'; // Add your deployed service URL here
+const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbxglFHz0MtUXUcEufyUBKcyWfLHFaSIU5LE6pxrL0b_w7fK2zR1NImNmWdQ1G4SWCt7/exec'; // Add your deployed service URL here
 
 // Load quiz data from Google service or local file
 async function loadQuizData() {
@@ -217,15 +217,12 @@ async function loadQuizData() {
     // Try to load from Google service first
     if (GOOGLE_SERVICE_URL) {
       console.log('Loading quiz data from Google service...');
-      const response = await fetch(GOOGLE_SERVICE_URL);
-      if (!response.ok) {
-        throw new Error(`Google service error! status: ${response.status}`);
-      }
-      const serviceResult = await response.json();
       
-      if (serviceResult.success && serviceResult.fileUrl) {
+      // Use JSONP approach to avoid CORS issues
+      const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
+      if (response.success && response.fileUrl) {
         // Convert Google Drive URL to direct download URL
-        const directUrl = convertGoogleDriveUrl(serviceResult.fileUrl);
+        const directUrl = convertGoogleDriveUrl(response.fileUrl);
         console.log(`Downloading from: ${directUrl}`);
         
         const jsonResponse = await fetch(directUrl);
@@ -233,9 +230,9 @@ async function loadQuizData() {
           throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
         }
         data = await jsonResponse.json();
-        console.log(`✅ Loaded quiz data from Google service: ${serviceResult.questionsCount} questions`);
+        console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
       } else {
-        throw new Error(`Google service failed: ${serviceResult.error || 'Unknown error'}`);
+        throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
       }
     } else {
       // Fallback to local file
@@ -270,6 +267,45 @@ async function loadQuizData() {
       </div>
     `;
   }
+}
+
+// Fetch Google service using JSONP to avoid CORS
+function fetchGoogleService(url) {
+  return new Promise((resolve, reject) => {
+    // Create a unique callback name
+    const callbackName = 'googleServiceCallback_' + Math.random().toString(36).substr(2, 9);
+    
+    // Create script element
+    const script = document.createElement('script');
+    script.src = url + '?callback=' + callbackName;
+    
+    // Set up global callback
+    window[callbackName] = function(data) {
+      // Clean up
+      document.head.removeChild(script);
+      delete window[callbackName];
+      resolve(data);
+    };
+    
+    // Handle errors
+    script.onerror = () => {
+      document.head.removeChild(script);
+      delete window[callbackName];
+      reject(new Error('Failed to load Google service'));
+    };
+    
+    // Add script to page
+    document.head.appendChild(script);
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      if (window[callbackName]) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        reject(new Error('Google service timeout'));
+      }
+    }, 10000);
+  });
 }
 
 // Convert Google Drive URL to direct download URL

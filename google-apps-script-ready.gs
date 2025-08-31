@@ -350,21 +350,54 @@ function doGet(e) {
   try {
     const result = generateQuizJSON();
     
-    if (result.success) {
+    // Check if this is a JSONP request
+    const callback = e.parameter.callback;
+    
+    if (callback) {
+      // JSONP response
+      const jsonpResponse = `${callback}(${JSON.stringify(result)})`;
       return ContentService
-        .createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON);
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      return ContentService
-        .createTextOutput(JSON.stringify({ error: result.error }))
-        .setMimeType(ContentService.MimeType.JSON);
+      // Regular JSON response
+      if (result.success) {
+        return ContentService
+          .createTextOutput(JSON.stringify(result))
+          .setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService
+          .createTextOutput(JSON.stringify({ error: result.error }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
     }
     
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    const errorResult = { error: error.toString() };
+    const callback = e.parameter.callback;
+    
+    if (callback) {
+      // JSONP error response
+      const jsonpResponse = `${callback}(${JSON.stringify(errorResult)})`;
+      return ContentService
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Regular JSON error response
+      return ContentService
+        .createTextOutput(JSON.stringify(errorResult))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
+}
+
+/**
+ * Handle CORS preflight requests
+ */
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
 /**

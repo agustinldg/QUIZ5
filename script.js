@@ -180,6 +180,12 @@ restartBtn.addEventListener("click", restart);
 prevBtn.addEventListener("click", prevQuestion);
 nextBtn.addEventListener("click", nextQuestion);
 
+// Add event listener for download results button
+const downloadResultsBtn = document.getElementById("download-results-btn");
+if (downloadResultsBtn) {
+  downloadResultsBtn.addEventListener("click", downloadResults);
+}
+
 // Keyboard shortcuts: 1/2/3 to select, Enter to continue, Arrow keys to navigate
 document.addEventListener("keydown", (e) => {
   if (resultsEl.hidden === false) return; // ignore on results
@@ -659,6 +665,139 @@ function testServiceUrl() {
       delete window.testCallback;
     }
   }, 10000);
+}
+
+// Function to generate and download PDF results
+function downloadResults() {
+  try {
+    // Create new PDF document
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Set up document properties
+    doc.setProperties({
+      title: 'Resultados del Quiz',
+      subject: 'Quiz de Imágenes',
+      author: 'Quiz App',
+      creator: 'Quiz App'
+    });
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resultados del Quiz', 105, 20, { align: 'center' });
+    
+    // Add score
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Puntuación: ${state.score} / ${quizData.length}`, 105, 35, { align: 'center' });
+    
+    // Add date
+    const currentDate = new Date().toLocaleDateString('es-ES');
+    doc.text(`Fecha: ${currentDate}`, 105, 45, { align: 'center' });
+    
+    // Add separator
+    doc.line(20, 55, 190, 55);
+    
+    let yPosition = 70;
+    const pageHeight = 280;
+    const lineHeight = 8;
+    
+    // Process each question
+    state.selections.forEach((selection, index) => {
+      const question = quizData[index];
+      
+      // Check if we need a new page
+      if (yPosition > pageHeight) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Question number and prompt
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Pregunta ${index + 1}:`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Pregunta: ${question.prompt.caption}`, 20, yPosition);
+      yPosition += lineHeight;
+      
+      // Get the correct answer
+      const correctChoiceIndex = question.shuffledData ? question.shuffledData.correctIndex : 
+        question.choices.findIndex(choice => choice.id === question.correctAnswerId);
+      const correctChoice = question.choices[correctChoiceIndex];
+      
+      // User's answer
+      const userChoice = selection !== null ? question.shuffledData ? 
+        question.shuffledData.choices[selection] : question.choices[selection] : null;
+      
+      // Display user's answer
+      if (userChoice) {
+        doc.text(`Tu respuesta: ${userChoice.caption}`, 20, yPosition);
+        yPosition += lineHeight;
+        
+        // Check if correct
+        const isCorrect = selection === correctChoiceIndex;
+        if (isCorrect) {
+          doc.setTextColor(0, 128, 0); // Green
+          doc.text('✅ Correcta', 20, yPosition);
+        } else {
+          doc.setTextColor(255, 0, 0); // Red
+          doc.text('❌ Incorrecta', 20, yPosition);
+          doc.text(`Respuesta correcta: ${correctChoice.caption}`, 20, yPosition + lineHeight);
+          yPosition += lineHeight;
+        }
+        doc.setTextColor(0, 0, 0); // Reset to black
+      } else {
+        doc.setTextColor(128, 128, 128); // Gray
+        doc.text('Sin responder', 20, yPosition);
+        doc.setTextColor(0, 0, 0); // Reset to black
+      }
+      
+      yPosition += lineHeight * 2; // Add extra space between questions
+    });
+    
+    // Add summary
+    if (yPosition > pageHeight - 30) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.line(20, yPosition, 190, yPosition);
+    yPosition += lineHeight;
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Resumen:', 20, yPosition);
+    yPosition += lineHeight;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total de preguntas: ${quizData.length}`, 20, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Respuestas correctas: ${state.score}`, 20, yPosition);
+    yPosition += lineHeight;
+    doc.text(`Respuestas incorrectas: ${quizData.length - state.score}`, 20, yPosition);
+    yPosition += lineHeight;
+    
+    const percentage = Math.round((state.score / quizData.length) * 100);
+    doc.text(`Porcentaje de acierto: ${percentage}%`, 20, yPosition);
+    
+    // Generate filename with date
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `resultados_quiz_${dateStr}.pdf`;
+    
+    // Save the PDF
+    doc.save(filename);
+    
+    console.log('✅ PDF generado y descargado exitosamente');
+    
+  } catch (error) {
+    console.error('❌ Error al generar el PDF:', error);
+    alert('Error al generar el PDF. Por favor, intenta de nuevo.');
+  }
 }
 
 // Start the app by loading quiz data

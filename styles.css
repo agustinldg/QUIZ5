@@ -138,7 +138,7 @@ body {
   display: block;
   width: clamp(400px, 45vw, 600px); /* Larger for iPad landscape */
   aspect-ratio: 16/9;
-  object-fit: cover;
+  object-fit: contain;
   height: auto;
   margin: 0 auto 20px;
   border-radius: 25px;
@@ -241,11 +241,12 @@ body {
 .choice-btn img {
   width: 100%;
   height: clamp(160px, 25vw, 280px);
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 14px;
   border: 3px solid var(--accent-2);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  background: #f0f0f0;
 }
 
 .choice-btn:hover img,
@@ -404,11 +405,12 @@ align-items: center;
   width: 100%;
   height: auto;
   aspect-ratio: 16/9;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: clamp(12px, 2vw, 20px);
   border: clamp(3px, 0.5vw, 5px) solid var(--accent);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  background: #f0f0f0;
 }
 
 .prompt button:hover img {
@@ -862,11 +864,12 @@ align-items: center;
   width: 100%;
   height: auto;
   aspect-ratio: 16/9;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: clamp(10px, 1.5vw, 16px);
   border: clamp(2px, 0.4vw, 4px) solid var(--accent-2);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  background: #f0f0f0;
 }
 .choice-btn .caption {
   margin-top: clamp(8px, 1.5vw, 10px);

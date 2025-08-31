@@ -207,7 +207,7 @@ function getFileName(url) {
 }
 
 // Configuration for Google service
-const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbwwsmzXoo6lh0oiItUVTP0PsrC5Y2r253DQ6Ez-TQbKl75YVqLYAPWMYiq9Si0DIzJJ/exec';
+const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbyOePxK7OIlNpaJqz4u7WV7t0wHR42VDpi6bl96yRaHtrHLxPX5By4QI1Vw8ozeZ0yq/exec';
 
 // Load quiz data from Google service or local file
 async function loadQuizData() {

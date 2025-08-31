@@ -404,19 +404,27 @@ function fetchGoogleService(url) {
       // Clean up
       document.head.removeChild(script);
       delete window[callbackName];
+      console.log('JSONP callback received:', data);
       resolve(data);
     };
     
-    // Handle errors
+    // Handle errors with more detailed logging
     script.onerror = (error) => {
       document.head.removeChild(script);
       delete window[callbackName];
       console.error('JSONP script error:', error);
-      reject(new Error('Failed to load Google service - script error'));
+      console.error('Script URL that failed:', script.src);
+      console.error('Error details:', {
+        type: error.type,
+        target: error.target,
+        srcElement: error.srcElement
+      });
+      reject(new Error(`Failed to load Google service - script error. URL: ${script.src}`));
     };
     
     // Add script to page
     document.head.appendChild(script);
+    console.log('JSONP script added:', script.src);
     
     // Timeout after 30 seconds (increased for image processing)
     setTimeout(() => {
@@ -487,7 +495,37 @@ async function testGoogleService() {
     return data;
   } catch (error) {
     console.log('JSONP failed:', error.message);
+    
+    // Try direct fetch to see if service is accessible
+    try {
+      console.log('Testing direct fetch...');
+      const response = await fetch(GOOGLE_SERVICE_URL);
+      console.log('Direct fetch response status:', response.status);
+      const text = await response.text();
+      console.log('Direct fetch response text:', text.substring(0, 200) + '...');
+    } catch (fetchError) {
+      console.log('Direct fetch also failed:', fetchError.message);
+    }
+    
     throw error;
+  }
+}
+
+// Test service URL accessibility
+async function testServiceUrl() {
+  console.log('🔗 Testing service URL accessibility...');
+  console.log('URL:', GOOGLE_SERVICE_URL);
+  
+  try {
+    const response = await fetch(GOOGLE_SERVICE_URL, {
+      method: 'HEAD',
+      mode: 'no-cors'
+    });
+    console.log('✅ Service URL is accessible');
+    return true;
+  } catch (error) {
+    console.log('❌ Service URL is not accessible:', error.message);
+    return false;
   }
 }
 

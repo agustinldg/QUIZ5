@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Service Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Apps Script Service Test</h1>
+    
+    <div class="test-section">
+        <h2>Service URL</h2>
+        <p><strong>URL:</strong> <span id="service-url"></span></p>
+        <button onclick="testUrlAccess()">Test URL Accessibility</button>
+        <div id="url-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>JSONP Test</h2>
+        <button onclick="testJSONP()">Test JSONP</button>
+        <div id="jsonp-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Direct Fetch Test</h2>
+        <button onclick="testDirectFetch()">Test Direct Fetch</button>
+        <div id="fetch-result" class="result"></div>
+    </div>
+
+    <script>
+        const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbyOePxK7OIlNpaJqz4u7WV7t0wHR42VDpi6bl96yRaHtrHLxPX5By4QI1Vw8ozeZ0yq/exec';
+        
+        document.getElementById('service-url').textContent = GOOGLE_SERVICE_URL;
+        
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = 'result ' + (isError ? 'error' : 'success');
+        }
+        
+        async function testUrlAccess() {
+            showResult('url-result', 'Testing...');
+            try {
+                const response = await fetch(GOOGLE_SERVICE_URL, {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                showResult('url-result', '✅ Service URL is accessible\nStatus: ' + response.status);
+            } catch (error) {
+                showResult('url-result', '❌ Service URL is not accessible\nError: ' + error.message, true);
+            }
+        }
+        
+        function testJSONP() {
+            showResult('jsonp-result', 'Testing JSONP...');
+            
+            return new Promise((resolve, reject) => {
+                const callbackName = 'testCallback_' + Math.random().toString(36).substr(2, 9);
+                
+                const script = document.createElement('script');
+                script.src = GOOGLE_SERVICE_URL + '?callback=' + callbackName;
+                
+                window[callbackName] = function(data) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    showResult('jsonp-result', '✅ JSONP Success\nData: ' + JSON.stringify(data, null, 2));
+                    resolve(data);
+                };
+                
+                script.onerror = (error) => {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    showResult('jsonp-result', '❌ JSONP Error\nError: ' + error.type + '\nScript URL: ' + script.src, true);
+                    reject(error);
+                };
+                
+                document.head.appendChild(script);
+                
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        showResult('jsonp-result', '❌ JSONP Timeout after 10 seconds', true);
+                    }
+                }, 10000);
+            });
+        }
+        
+        async function testDirectFetch() {
+            showResult('fetch-result', 'Testing direct fetch...');
+            try {
+                const response = await fetch(GOOGLE_SERVICE_URL);
+                const text = await response.text();
+                showResult('fetch-result', '✅ Direct Fetch Success\nStatus: ' + response.status + '\nResponse: ' + text.substring(0, 500) + '...');
+            } catch (error) {
+                showResult('fetch-result', '❌ Direct Fetch Error\nError: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

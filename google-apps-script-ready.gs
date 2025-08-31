@@ -1,6 +1,7 @@
 /**
- * Google Sheets Quiz Service
+ * Google Sheets Quiz Service with Caching
  * Reads quiz data from Google Sheets and generates JSON with embedded base64 images
+ * Implements caching to avoid regenerating JSON unless sheet has been modified
  * 
  * Sheet columns:
  * A: Pregunta (Question number)
@@ -21,11 +22,11 @@ const SHEET_NAME = 'Quiz Data'; // Change this to your sheet name
 const SPREADSHEET_ID = ''; // Leave empty to use active spreadsheet, or add your ID
 
 /**
- * Main function to generate quiz JSON
+ * Main function to generate quiz JSON with caching
  */
 function generateQuizJSON() {
   try {
-    console.log('Starting quiz JSON generation...');
+    console.log('Starting quiz JSON generation with caching...');
     const startTime = new Date();
     
     // Get the spreadsheet and sheet
@@ -35,6 +36,26 @@ function generateQuizJSON() {
     if (!sheet) {
       throw new Error(`Sheet "${SHEET_NAME}" not found. Please check the sheet name.`);
     }
+    
+    // Generate cache filename
+    const cacheFileName = generateCacheFileName(spreadsheet, sheet);
+    console.log(`Cache filename: ${cacheFileName}`);
+    
+    // Check if we can use cached version
+    const cachedData = checkCache(spreadsheet, sheet, cacheFileName);
+    if (cachedData) {
+      console.log('✅ Using cached quiz data');
+      return {
+        success: true,
+        quizData: cachedData,
+        questionsCount: cachedData.questions.length,
+        generatedAt: cachedData.metadata.created,
+        processingTime: 0,
+        source: 'cache'
+      };
+    }
+    
+    console.log('🔄 Cache miss - generating new quiz data...');
     
     // Get all data from the sheet
     const data = sheet.getDataRange().getValues();
@@ -72,27 +93,29 @@ function generateQuizJSON() {
         description: "Quiz generated from Google Sheets",
         imageFormat: "base64",
         source: "Google Sheets",
-        generatedBy: "Google Apps Script"
+        generatedBy: "Google Apps Script",
+        cacheKey: generateCacheKey(spreadsheet, sheet)
       }
     };
     
-    // Convert to JSON string
-    const jsonString = JSON.stringify(quizData, null, 2);
+    // Save to cache
+    saveToCache(quizData, cacheFileName);
     
     const endTime = new Date();
     const totalTime = endTime - startTime;
     
-    console.log(`✅ Quiz JSON generated successfully!`);
+    console.log(`✅ Quiz JSON generated and cached successfully!`);
     console.log(`📊 Questions processed: ${questions.length}`);
     console.log(`⏱️ Total processing time: ${totalTime}ms`);
     
-    // Return the quiz data directly instead of creating a file
+    // Return the quiz data directly
     return {
       success: true,
       quizData: quizData,
       questionsCount: questions.length,
       generatedAt: new Date().toISOString(),
-      processingTime: totalTime
+      processingTime: totalTime,
+      source: 'generated'
     };
     
   } catch (error) {
@@ -101,6 +124,117 @@ function generateQuizJSON() {
       success: false,
       error: error.toString()
     };
+  }
+}
+
+/**
+ * Generate cache filename based on spreadsheet and sheet names
+ */
+function generateCacheFileName(spreadsheet, sheet) {
+  const spreadsheetName = spreadsheet.getName().replace(/[^a-zA-Z0-9]/g, '_');
+  const sheetName = sheet.getName().replace(/[^a-zA-Z0-9]/g, '_');
+  return `${spreadsheetName}_${sheetName}_quiz_cache.json`;
+}
+
+/**
+ * Generate cache key based on sheet modification time
+ */
+function generateCacheKey(spreadsheet, sheet) {
+  const lastModified = sheet.getLastModified();
+  return `${spreadsheet.getId()}_${sheet.getSheetId()}_${lastModified.getTime()}`;
+}
+
+/**
+ * Check if cached version exists and is valid
+ */
+function checkCache(spreadsheet, sheet, cacheFileName) {
+  try {
+    console.log('🔍 Checking cache...');
+    
+    // Get the folder where the spreadsheet is located
+    const spreadsheetFile = DriveApp.getFileById(spreadsheet.getId());
+    const parentFolder = spreadsheetFile.getParents().next();
+    
+    // Look for cache file in the same folder
+    const cacheFiles = parentFolder.getFilesByName(cacheFileName);
+    
+    if (!cacheFiles.hasNext()) {
+      console.log('❌ Cache file not found');
+      return null;
+    }
+    
+    const cacheFile = cacheFiles.next();
+    console.log(`📁 Found cache file: ${cacheFile.getName()}`);
+    
+    // Check if cache file is newer than sheet modification
+    const cacheLastModified = cacheFile.getLastUpdated();
+    const sheetLastModified = sheet.getLastModified();
+    
+    console.log(`📅 Cache file modified: ${cacheLastModified}`);
+    console.log(`📅 Sheet modified: ${sheetLastModified}`);
+    
+    if (cacheLastModified < sheetLastModified) {
+      console.log('❌ Cache is outdated - sheet has been modified');
+      return null;
+    }
+    
+    // Read and parse cache file
+    const cacheContent = cacheFile.getBlob().getDataAsString();
+    const cachedData = JSON.parse(cacheContent);
+    
+    // Validate cache structure
+    if (!cachedData.questions || !Array.isArray(cachedData.questions)) {
+      console.log('❌ Invalid cache structure');
+      return null;
+    }
+    
+    console.log(`✅ Cache is valid with ${cachedData.questions.length} questions`);
+    return cachedData;
+    
+  } catch (error) {
+    console.error('❌ Error checking cache:', error);
+    return null;
+  }
+}
+
+/**
+ * Save quiz data to cache file
+ */
+function saveToCache(quizData, cacheFileName) {
+  try {
+    console.log('💾 Saving to cache...');
+    
+    // Get the folder where the spreadsheet is located
+    const spreadsheet = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheetFile = DriveApp.getFileById(spreadsheet.getId());
+    const parentFolder = spreadsheetFile.getParents().next();
+    
+    // Convert quiz data to JSON string
+    const jsonString = JSON.stringify(quizData, null, 2);
+    
+    // Create or update cache file
+    const cacheFiles = parentFolder.getFilesByName(cacheFileName);
+    
+    let cacheFile;
+    if (cacheFiles.hasNext()) {
+      // Update existing file
+      cacheFile = cacheFiles.next();
+      cacheFile.setContent(jsonString);
+      console.log(`📝 Updated existing cache file: ${cacheFile.getName()}`);
+    } else {
+      // Create new file
+      cacheFile = parentFolder.createFile(cacheFileName, jsonString, MimeType.JSON);
+      console.log(`📝 Created new cache file: ${cacheFile.getName()}`);
+    }
+    
+    // Set file permissions to be accessible by the script
+    cacheFile.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+    
+    console.log(`✅ Cache saved successfully: ${cacheFile.getUrl()}`);
+    
+  } catch (error) {
+    console.error('❌ Error saving to cache:', error);
+    // Don't throw error - caching is optional
   }
 }
 
@@ -532,4 +666,115 @@ function diagnoseCell(sheetName, row, column) {
 function testCellB2() {
   console.log('🧪 Testing cell B2...');
   diagnoseCell(SHEET_NAME, 2, 2);
+}
+
+/**
+ * Clear cache file - useful for testing or forcing regeneration
+ */
+function clearCache() {
+  try {
+    console.log('🗑️ Clearing cache...');
+    
+    // Get the spreadsheet and sheet
+    const spreadsheet = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+    }
+    
+    // Generate cache filename
+    const cacheFileName = generateCacheFileName(spreadsheet, sheet);
+    
+    // Get the folder where the spreadsheet is located
+    const spreadsheetFile = DriveApp.getFileById(spreadsheet.getId());
+    const parentFolder = spreadsheetFile.getParents().next();
+    
+    // Look for cache file in the same folder
+    const cacheFiles = parentFolder.getFilesByName(cacheFileName);
+    
+    if (cacheFiles.hasNext()) {
+      const cacheFile = cacheFiles.next();
+      cacheFile.setTrashed(true);
+      console.log(`✅ Cache file deleted: ${cacheFile.getName()}`);
+      return {
+        success: true,
+        message: `Cache file "${cacheFileName}" has been deleted`
+      };
+    } else {
+      console.log('ℹ️ No cache file found to delete');
+      return {
+        success: true,
+        message: 'No cache file found to delete'
+      };
+    }
+    
+  } catch (error) {
+    console.error('❌ Error clearing cache:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Get cache status - useful for debugging
+ */
+function getCacheStatus() {
+  try {
+    console.log('📊 Getting cache status...');
+    
+    // Get the spreadsheet and sheet
+    const spreadsheet = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      throw new Error(`Sheet "${SHEET_NAME}" not found.`);
+    }
+    
+    // Generate cache filename
+    const cacheFileName = generateCacheFileName(spreadsheet, sheet);
+    
+    // Get the folder where the spreadsheet is located
+    const spreadsheetFile = DriveApp.getFileById(spreadsheet.getId());
+    const parentFolder = spreadsheetFile.getParents().next();
+    
+    // Look for cache file in the same folder
+    const cacheFiles = parentFolder.getFilesByName(cacheFileName);
+    
+    const sheetLastModified = sheet.getLastModified();
+    
+    if (cacheFiles.hasNext()) {
+      const cacheFile = cacheFiles.next();
+      const cacheLastModified = cacheFile.getLastUpdated();
+      const isOutdated = cacheLastModified < sheetLastModified;
+      
+      return {
+        success: true,
+        cacheExists: true,
+        cacheFileName: cacheFileName,
+        cacheLastModified: cacheLastModified.toISOString(),
+        sheetLastModified: sheetLastModified.toISOString(),
+        isOutdated: isOutdated,
+        cacheFileUrl: cacheFile.getUrl(),
+        cacheFileSize: cacheFile.getSize()
+      };
+    } else {
+      return {
+        success: true,
+        cacheExists: false,
+        cacheFileName: cacheFileName,
+        sheetLastModified: sheetLastModified.toISOString(),
+        message: 'No cache file found'
+      };
+    }
+    
+  } catch (error) {
+    console.error('❌ Error getting cache status:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
 }

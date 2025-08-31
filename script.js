@@ -207,7 +207,7 @@ function getFileName(url) {
 }
 
 // Configuration for Google service
-const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbzhrxydtYzyqft3UqeQk08SQkCkl7rbS936vIe9WNANVkJc6oC5J7secgDF6WKbvW4/exec'; // Add your deployed service URL here
+const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbwrZ7LUdGTExkr5B06GiPPquQS8-YXvCkw7vrWT1Rc/dev; // Add your deployed service URL here
 
 // Load quiz data from Google service or local file
 async function loadQuizData() {
@@ -224,8 +224,11 @@ async function loadQuizData() {
       const serviceResult = await response.json();
       
       if (serviceResult.success && serviceResult.fileUrl) {
-        // Download the generated JSON file
-        const jsonResponse = await fetch(serviceResult.fileUrl);
+        // Convert Google Drive URL to direct download URL
+        const directUrl = convertGoogleDriveUrl(serviceResult.fileUrl);
+        console.log(`Downloading from: ${directUrl}`);
+        
+        const jsonResponse = await fetch(directUrl);
         if (!jsonResponse.ok) {
           throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
         }
@@ -267,6 +270,18 @@ async function loadQuizData() {
       </div>
     `;
   }
+}
+
+// Convert Google Drive URL to direct download URL
+function convertGoogleDriveUrl(url) {
+  // Extract file ID from Google Drive URL
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+  if (match) {
+    const fileId = match[1];
+    // Return direct download URL
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  }
+  return url; // Return original URL if no match
 }
 
 // Fallback function to load local data

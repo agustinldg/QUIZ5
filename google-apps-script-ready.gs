@@ -78,6 +78,9 @@ function generateQuizJSON() {
     const fileName = `quiz-data-${new Date().toISOString().split('T')[0]}.json`;
     const file = DriveApp.createFile(fileName, jsonString, MimeType.PLAIN_TEXT);
     
+    // Make the file publicly accessible
+    file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+    
     console.log(`✅ Quiz JSON generated successfully!`);
     console.log(`📁 File: ${fileName}`);
     console.log(`🔗 File ID: ${file.getId()}`);

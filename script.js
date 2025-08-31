@@ -220,12 +220,16 @@ async function loadQuizData() {
       
       // Use JSONP approach directly since it works
       const response = await fetchGoogleService(GOOGLE_SERVICE_URL);
-      if (response.success && response.quizData) {
+      console.log('Google service response:', response);
+      
+      if (response && response.success && response.quizData) {
         // Use the quiz data directly from the service
         data = response.quizData;
         console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
       } else {
-        throw new Error(`Google service failed: ${response.error || 'Unknown error'}`);
+        const errorMsg = response ? (response.error || 'Unknown error') : 'No response from service';
+        console.error('Google service error details:', response);
+        throw new Error(`Google service failed: ${errorMsg}`);
       }
     } else {
       // Fallback to local file
@@ -281,10 +285,11 @@ function fetchGoogleService(url) {
     };
     
     // Handle errors
-    script.onerror = () => {
+    script.onerror = (error) => {
       document.head.removeChild(script);
       delete window[callbackName];
-      reject(new Error('Failed to load Google service'));
+      console.error('JSONP script error:', error);
+      reject(new Error('Failed to load Google service - script error'));
     };
     
     // Add script to page
@@ -295,7 +300,8 @@ function fetchGoogleService(url) {
       if (window[callbackName]) {
         document.head.removeChild(script);
         delete window[callbackName];
-        reject(new Error('Google service timeout'));
+        console.error('JSONP timeout - script URL:', script.src);
+        reject(new Error('Google service timeout after 30 seconds'));
       }
     }, 30000);
   });
@@ -349,6 +355,43 @@ async function testGoogleService() {
     console.log('JSONP failed:', error.message);
     throw error;
   }
+}
+
+// Simple test to check if service URL is accessible
+function testServiceUrl() {
+  console.log('🔗 Testing service URL accessibility...');
+  console.log('URL:', GOOGLE_SERVICE_URL);
+  
+  // Create a simple script tag to test
+  const testScript = document.createElement('script');
+  testScript.src = GOOGLE_SERVICE_URL + '?callback=testCallback';
+  
+  // Set up a test callback
+  window.testCallback = function(data) {
+    console.log('✅ Service URL is accessible!');
+    console.log('Test response:', data);
+    document.head.removeChild(testScript);
+    delete window.testCallback;
+  };
+  
+  // Handle errors
+  testScript.onerror = function(error) {
+    console.error('❌ Service URL is not accessible:', error);
+    document.head.removeChild(testScript);
+    delete window.testCallback;
+  };
+  
+  // Add to page
+  document.head.appendChild(testScript);
+  
+  // Cleanup after 10 seconds
+  setTimeout(() => {
+    if (window.testCallback) {
+      console.log('⚠️ Test callback not called within 10 seconds');
+      document.head.removeChild(testScript);
+      delete window.testCallback;
+    }
+  }, 10000);
 }
 
 // Start the app by loading quiz data

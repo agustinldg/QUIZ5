@@ -31,9 +31,9 @@ function updateProgress() {
   const questionNumber = state.currentIndex + 1;
   progressBarEl.style.width = `${(questionNumber - 1) / quizData.length * 100}%`;
   progressBarEl.setAttribute("aria-valuenow", String(questionNumber - 1));
-  progressTextEl.textContent = `Question ${questionNumber} / ${quizData.length}`;
+  progressTextEl.textContent = `Pregunta ${questionNumber} / ${quizData.length}`;
   prevBtn.disabled = state.currentIndex === 0;
-  nextBtn.textContent = state.currentIndex === quizData.length - 1 ? "Finish" : "Next";
+  nextBtn.textContent = state.currentIndex === quizData.length - 1 ? "Finalizar" : "Siguiente";
 }
 
 // Shuffle array using Fisher-Yates algorithm
@@ -56,9 +56,9 @@ function renderQuestion() {
   const promptCaption = document.getElementById('prompt-caption');
   if (promptBtn && promptCaption) {
     promptImageEl.src = question.prompt.imageBase64;
-    promptImageEl.alt = 'Question image';
+    promptImageEl.alt = 'Imagen de la pregunta';
     promptImageEl.onload = () => { /* noop visual */ };
-    promptImageEl.onerror = () => { promptImageEl.alt = "Failed to load question image"; };
+    promptImageEl.onerror = () => { promptImageEl.alt = "Error al cargar la imagen de la pregunta"; };
     promptCaption.textContent = question.prompt.caption;
     // Click handler for both image and caption (button click)
     promptBtn.onclick = () => {
@@ -92,9 +92,9 @@ function renderQuestion() {
 
     const img = document.createElement("img");
     img.src = choice.imageBase64;
-    img.alt = `Answer option ${idx + 1}`;
+    img.alt = `Opción de respuesta ${idx + 1}`;
     img.loading = "eager";
-    img.onerror = () => { img.alt = "Image failed to load"; };
+    img.onerror = () => { img.alt = "Error al cargar la imagen"; };
 
     btn.appendChild(img);
     
@@ -157,8 +157,8 @@ function showResults() {
   resultsEl.hidden = false;
   progressBarEl.style.width = "100%";
   progressBarEl.setAttribute("aria-valuenow", String(quizData.length));
-  progressTextEl.textContent = `Completed`;
-  scoreTextEl.textContent = `You scored ${state.score} / ${quizData.length}`;
+  progressTextEl.textContent = `Completado`;
+  scoreTextEl.textContent = `Obtuviste ${state.score} / ${quizData.length}`;
 }
 
 function restart() {
@@ -340,7 +340,7 @@ async function loadQuizData() {
     
     // Try to load from Google service first
     if (GOOGLE_SERVICE_URL) {
-      console.log('Loading quiz data from Google service...');
+      console.log('Cargando datos del quiz desde el servicio de Google...');
       
       // Show countdown timer
       const countdownEl = showCountdownTimer();
@@ -357,28 +357,28 @@ async function loadQuizData() {
           if (response.quizData) {
             // New format: quiz data directly in response
             data = response.quizData;
-            console.log(`✅ Loaded quiz data from Google service: ${response.questionsCount} questions`);
+            console.log(`✅ Datos del quiz cargados desde el servicio de Google: ${response.questionsCount} preguntas`);
           } else if (response.fileUrl) {
             // Old format: need to download file from Google Drive
-            console.log('Service returned file URL, downloading...');
+            console.log('El servicio devolvió URL del archivo, descargando...');
             const directUrl = convertGoogleDriveUrl(response.fileUrl);
-            console.log(`Downloading from: ${directUrl}`);
+            console.log(`Descargando desde: ${directUrl}`);
             
             const jsonResponse = await fetch(directUrl);
             if (!jsonResponse.ok) {
-              throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
-            }
-            data = await jsonResponse.json();
-            console.log(`✅ Loaded quiz data from Google Drive: ${response.questionsCount} questions`);
+                          throw new Error(`Error al descargar archivo JSON: ${jsonResponse.status}`);
+          }
+          data = await jsonResponse.json();
+          console.log(`✅ Datos del quiz cargados desde Google Drive: ${response.questionsCount} preguntas`);
           } else {
-            const errorMsg = 'Service returned success but no quiz data or file URL';
-            console.error('Google service error details:', response);
-            throw new Error(`Google service failed: ${errorMsg}`);
+                      const errorMsg = 'El servicio devolvió éxito pero sin datos del quiz ni URL del archivo';
+          console.error('Detalles del error del servicio de Google:', response);
+          throw new Error(`El servicio de Google falló: ${errorMsg}`);
           }
         } else {
-          const errorMsg = response ? (response.error || 'Unknown error') : 'No response from service';
-          console.error('Google service error details:', response);
-          throw new Error(`Google service failed: ${errorMsg}`);
+          const errorMsg = response ? (response.error || 'Error desconocido') : 'Sin respuesta del servicio';
+          console.error('Detalles del error del servicio de Google:', response);
+          throw new Error(`El servicio de Google falló: ${errorMsg}`);
         }
       } catch (error) {
         // Hide countdown timer on error
@@ -387,13 +387,13 @@ async function loadQuizData() {
       }
     } else {
       // Fallback to local file
-      console.log('Loading quiz data from local file...');
+      console.log('Cargando datos del quiz desde archivo local...');
       const response = await fetch('quiz-data-base64.json');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Error HTTP! estado: ${response.status}`);
       }
       data = await response.json();
-      console.log('✅ Loaded quiz data from local file');
+      console.log('✅ Datos del quiz cargados desde archivo local');
     }
     
     quizData = data.questions;
@@ -404,16 +404,16 @@ async function loadQuizData() {
     preloadForIndex(1);
     
   } catch (error) {
-    console.error('Error loading quiz data:', error);
+    console.error('Error al cargar datos del quiz:', error);
     // Show error message with retry options
     document.getElementById('quiz').innerHTML = `
       <div style="text-align: center; padding: 50px; color: white;">
-        <h2>Error Loading Quiz</h2>
-        <p>Could not load quiz data from Google service.</p>
+        <h2>Error al Cargar el Quiz</h2>
+        <p>No se pudieron cargar los datos del quiz desde el servicio de Google.</p>
         <p style="color: #ffcc00; font-size: 14px;">${error.message}</p>
         <div style="margin-top: 20px;">
-          <button onclick="loadQuizData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Retry Google Service</button>
-          <button onclick="loadLocalData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: #666; color: white; border: none; cursor: pointer;">Use Local File</button>
+          <button onclick="loadQuizData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Reintentar Servicio de Google</button>
+          <button onclick="loadLocalData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: #666; color: white; border: none; cursor: pointer;">Usar Archivo Local</button>
         </div>
       </div>
     `;
@@ -443,7 +443,7 @@ function fetchGoogleService(url) {
       document.head.removeChild(script);
       delete window[callbackName];
       console.error('JSONP script error:', error);
-      reject(new Error('Failed to load Google service - script error'));
+      reject(new Error('Error al cargar el servicio de Google - error de script'));
     };
     
     // Add script to page
@@ -455,7 +455,7 @@ function fetchGoogleService(url) {
         document.head.removeChild(script);
         delete window[callbackName];
         console.error('JSONP timeout - script URL:', script.src);
-        reject(new Error('Google service timeout after 90 seconds'));
+        reject(new Error('Tiempo de espera del servicio de Google agotado después de 90 segundos'));
       }
     }, 90000);
   });
@@ -491,33 +491,33 @@ async function loadLocalData() {
     preloadForIndex(0);
     preloadForIndex(1);
     
-    console.log('✅ Loaded quiz data from local file');
-  } catch (error) {
-    console.error('Error loading local data:', error);
-    document.getElementById('quiz').innerHTML = `
-      <div style="text-align: center; padding: 50px; color: white;">
-        <h2>Error Loading Quiz</h2>
-        <p>Could not load quiz data from local file either.</p>
-        <p style="color: #ffcc00; font-size: 14px;">${error.message}</p>
-        <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Reload Page</button>
-      </div>
-    `;
+          console.log('✅ Datos del quiz cargados desde archivo local');
+    } catch (error) {
+      console.error('Error al cargar datos locales:', error);
+      document.getElementById('quiz').innerHTML = `
+        <div style="text-align: center; padding: 50px; color: white;">
+          <h2>Error al Cargar el Quiz</h2>
+          <p>Tampoco se pudieron cargar los datos del quiz desde el archivo local.</p>
+          <p style="color: #ffcc00; font-size: 14px;">${error.message}</p>
+          <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Recargar Página</button>
+        </div>
+      `;
   }
 }
 
 // Test function to debug Google service
 async function testGoogleService() {
-  console.log('🧪 Testing Google service...');
-  console.log('Service URL:', GOOGLE_SERVICE_URL);
+  console.log('🧪 Probando servicio de Google...');
+  console.log('URL del servicio:', GOOGLE_SERVICE_URL);
   
   try {
     // Test JSONP (the working method)
-    console.log('Testing JSONP...');
+    console.log('Probando JSONP...');
     const data = await fetchGoogleService(GOOGLE_SERVICE_URL);
-    console.log('JSONP data:', data);
+    console.log('Datos JSONP:', data);
     return data;
   } catch (error) {
-    console.log('JSONP failed:', error.message);
+    console.log('JSONP falló:', error.message);
     throw error;
   }
 }
@@ -554,7 +554,7 @@ function showCountdownTimer() {
   
   // Create title
   const title = document.createElement('h2');
-  title.textContent = '🔄 Loading Quiz Data...';
+  title.textContent = '🔄 Cargando Datos del Quiz...';
   title.style.cssText = `
     color: white;
     margin: 0 0 20px 0;
@@ -575,7 +575,7 @@ function showCountdownTimer() {
   
   // Create message
   const message = document.createElement('p');
-  message.textContent = 'Please wait while we process your images...';
+  message.textContent = 'Por favor espera mientras procesamos tus imágenes...';
   message.style.cssText = `
     color: white;
     margin: 10px 0 0 0;
@@ -626,7 +626,7 @@ function hideCountdownTimer() {
 
 // Simple test to check if service URL is accessible
 function testServiceUrl() {
-  console.log('🔗 Testing service URL accessibility...');
+  console.log('🔗 Probando accesibilidad de la URL del servicio...');
   console.log('URL:', GOOGLE_SERVICE_URL);
   
   // Create a simple script tag to test
@@ -635,15 +635,15 @@ function testServiceUrl() {
   
   // Set up a test callback
   window.testCallback = function(data) {
-    console.log('✅ Service URL is accessible!');
-    console.log('Test response:', data);
+    console.log('✅ ¡La URL del servicio es accesible!');
+    console.log('Respuesta de prueba:', data);
     document.head.removeChild(testScript);
     delete window.testCallback;
   };
   
   // Handle errors
   testScript.onerror = function(error) {
-    console.error('❌ Service URL is not accessible:', error);
+    console.error('❌ La URL del servicio no es accesible:', error);
     document.head.removeChild(testScript);
     delete window.testCallback;
   };
@@ -654,7 +654,7 @@ function testServiceUrl() {
   // Cleanup after 10 seconds
   setTimeout(() => {
     if (window.testCallback) {
-      console.log('⚠️ Test callback not called within 10 seconds');
+      console.log('⚠️ La función de prueba no fue llamada dentro de 10 segundos');
       document.head.removeChild(testScript);
       delete window.testCallback;
     }

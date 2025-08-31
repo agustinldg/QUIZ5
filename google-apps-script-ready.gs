@@ -354,15 +354,13 @@ function doGet(e) {
     } else {
       return ContentService
         .createTextOutput(JSON.stringify({ error: result.error }))
-        .setMimeType(ContentService.MimeType.JSON)
-        .setStatusCode(500);
+        .setMimeType(ContentService.MimeType.JSON);
     }
     
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setStatusCode(500);
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 

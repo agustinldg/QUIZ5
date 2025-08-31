@@ -206,8 +206,71 @@ function getFileName(url) {
   }
 }
 
-// Load quiz data from base64 JSON file
+// Configuration for Google service
+const GOOGLE_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbzhrxydtYzyqft3UqeQk08SQkCkl7rbS936vIe9WNANVkJc6oC5J7secgDF6WKbvW4/exec'; // Add your deployed service URL here
+
+// Load quiz data from Google service or local file
 async function loadQuizData() {
+  try {
+    let data;
+    
+    // Try to load from Google service first
+    if (GOOGLE_SERVICE_URL) {
+      console.log('Loading quiz data from Google service...');
+      const response = await fetch(GOOGLE_SERVICE_URL);
+      if (!response.ok) {
+        throw new Error(`Google service error! status: ${response.status}`);
+      }
+      const serviceResult = await response.json();
+      
+      if (serviceResult.success && serviceResult.fileUrl) {
+        // Download the generated JSON file
+        const jsonResponse = await fetch(serviceResult.fileUrl);
+        if (!jsonResponse.ok) {
+          throw new Error(`Failed to download JSON file: ${jsonResponse.status}`);
+        }
+        data = await jsonResponse.json();
+        console.log(`✅ Loaded quiz data from Google service: ${serviceResult.questionsCount} questions`);
+      } else {
+        throw new Error(`Google service failed: ${serviceResult.error || 'Unknown error'}`);
+      }
+    } else {
+      // Fallback to local file
+      console.log('Loading quiz data from local file...');
+      const response = await fetch('quiz-data-base64.json');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      data = await response.json();
+      console.log('✅ Loaded quiz data from local file');
+    }
+    
+    quizData = data.questions;
+    
+    // Initialize the quiz after data is loaded
+    renderQuestion();
+    preloadForIndex(0);
+    preloadForIndex(1);
+    
+  } catch (error) {
+    console.error('Error loading quiz data:', error);
+    // Show error message with retry options
+    document.getElementById('quiz').innerHTML = `
+      <div style="text-align: center; padding: 50px; color: white;">
+        <h2>Error Loading Quiz</h2>
+        <p>Could not load quiz data from Google service.</p>
+        <p style="color: #ffcc00; font-size: 14px;">${error.message}</p>
+        <div style="margin-top: 20px;">
+          <button onclick="loadQuizData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Retry Google Service</button>
+          <button onclick="loadLocalData()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: #666; color: white; border: none; cursor: pointer;">Use Local File</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Fallback function to load local data
+async function loadLocalData() {
   try {
     const response = await fetch('quiz-data-base64.json');
     if (!response.ok) {
@@ -220,14 +283,16 @@ async function loadQuizData() {
     renderQuestion();
     preloadForIndex(0);
     preloadForIndex(1);
+    
+    console.log('✅ Loaded quiz data from local file');
   } catch (error) {
-    console.error('Error loading quiz data:', error);
-    // Fallback to a simple error message
+    console.error('Error loading local data:', error);
     document.getElementById('quiz').innerHTML = `
       <div style="text-align: center; padding: 50px; color: white;">
         <h2>Error Loading Quiz</h2>
-        <p>Could not load quiz data. Please check if quiz-data-base64.json exists.</p>
-        <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Retry</button>
+        <p>Could not load quiz data from local file either.</p>
+        <p style="color: #ffcc00; font-size: 14px;">${error.message}</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; margin: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; cursor: pointer;">Reload Page</button>
       </div>
     `;
   }

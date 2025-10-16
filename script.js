@@ -30,11 +30,11 @@ class HoverCrownSystem {
     ring.className = 'hover-crown-ring';
     crown.appendChild(ring);
     
-    // Calculate crown size (half of min(width, height) of button)
+    // Calculate crown size (quarter of min(width, height) of button)
     // Use a default size first, then update when button is rendered
     const rect = button.getBoundingClientRect();
     const size = rect.width > 0 && rect.height > 0 ? 
-      Math.min(rect.width, rect.height) / 2 : 50; // fallback size
+      Math.min(rect.width, rect.height) / 4 : 25; // fallback size
     crown.style.width = `${size}px`;
     crown.style.height = `${size}px`;
     
@@ -47,7 +47,7 @@ class HoverCrownSystem {
 
     const rect = button.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
-      const size = Math.min(rect.width, rect.height) / 2;
+      const size = Math.min(rect.width, rect.height) / 4;
       state.crown.style.width = `${size}px`;
       state.crown.style.height = `${size}px`;
     }
@@ -66,6 +66,7 @@ class HoverCrownSystem {
       progressTimer: null,
       animationFrame: null,
       forgetTimer: null,
+      progressStartTime: null,
       progress: 0,
       isActive: false
     };
@@ -109,19 +110,22 @@ class HoverCrownSystem {
       state.initialLagTimer = null;
     }
 
-    // Clear progress timer
-    if (state.progressTimer) {
-      clearInterval(state.progressTimer);
-      state.progressTimer = null;
+    // Stop animation but keep progress
+    if (state.animationFrame) {
+      cancelAnimationFrame(state.animationFrame);
+      state.animationFrame = null;
     }
 
-    // Start forget timer
-    if (state.isActive && state.progress > 0) {
+    // Pause the progress (don't reset)
+    state.isActive = false;
+    state.crown.classList.remove('active');
+    button.classList.remove('hover-active');
+
+    // Start forget timer only if there was progress
+    if (state.progress > 0) {
       state.forgetTimer = setTimeout(() => {
         this.resetProgress(button);
       }, HOVER_FORGET_TIME);
-    } else {
-      this.resetProgress(button);
     }
   }
 
@@ -133,14 +137,16 @@ class HoverCrownSystem {
     state.crown.classList.add('active');
     button.classList.add('hover-active');
 
-    // Calculate start time based on current progress
-    const startTime = Date.now() - (state.progress / 100) * HOVER_TIME_TO_CLICK;
+    // Store the time when progress started/resumed
+    if (!state.progressStartTime) {
+      state.progressStartTime = Date.now();
+    }
     
     // Use requestAnimationFrame for smooth animation
     const animate = () => {
       if (!state.isActive) return; // Stop if deactivated
       
-      const elapsed = Date.now() - startTime;
+      const elapsed = Date.now() - state.progressStartTime;
       state.progress = Math.min((elapsed / HOVER_TIME_TO_CLICK) * 100, 100);
       
       if (state.progress >= 100) {
@@ -226,6 +232,7 @@ class HoverCrownSystem {
     this.clearTimers(button);
     
     state.progress = 0;
+    state.progressStartTime = null;
     state.isActive = false;
     state.crown.classList.remove('active');
     button.classList.remove('hover-active');

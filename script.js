@@ -11,6 +11,279 @@
 // Quiz data will be loaded from JSON file
 let quizData = [];
 
+// Hover constants
+const HOVER_TIME_TO_CLICK = 4000; // 4 segundos
+const INITIAL_HOVER_LAG = 1000;   // 1 segundo
+const HOVER_FORGET_TIME = 2000;   // 2 segundos
+
+// Hover system
+class HoverCrownSystem {
+  constructor() {
+    this.hoverStates = new Map(); // Store hover state for each button
+  }
+
+  createCrown(button) {
+    const crown = document.createElement('div');
+    crown.className = 'hover-crown';
+    
+    const ring = document.createElement('div');
+    ring.className = 'hover-crown-ring';
+    crown.appendChild(ring);
+    
+    // Calculate crown size (half of min(width, height) of button)
+    // Use a default size first, then update when button is rendered
+    const rect = button.getBoundingClientRect();
+    const size = rect.width > 0 && rect.height > 0 ? 
+      Math.min(rect.width, rect.height) / 2 : 50; // fallback size
+    crown.style.width = `${size}px`;
+    crown.style.height = `${size}px`;
+    
+    return crown;
+  }
+
+  updateCrownSize(button) {
+    const state = this.hoverStates.get(button);
+    if (!state || !state.crown) return;
+
+    const rect = button.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      const size = Math.min(rect.width, rect.height) / 2;
+      state.crown.style.width = `${size}px`;
+      state.crown.style.height = `${size}px`;
+    }
+  }
+
+  setupButton(button) {
+    if (!button || this.hoverStates.has(button)) return;
+
+    const crown = this.createCrown(button);
+    button.appendChild(crown);
+    
+    const hoverState = {
+      crown: crown,
+      ring: crown.querySelector('.hover-crown-ring'),
+      initialLagTimer: null,
+      progressTimer: null,
+      animationFrame: null,
+      forgetTimer: null,
+      progress: 0,
+      isActive: false
+    };
+
+    this.hoverStates.set(button, hoverState);
+
+    // Mouse enter
+    button.addEventListener('mouseenter', () => {
+      this.onMouseEnter(button);
+    });
+
+    // Mouse leave
+    button.addEventListener('mouseleave', () => {
+      this.onMouseLeave(button);
+    });
+  }
+
+  onMouseEnter(button) {
+    const state = this.hoverStates.get(button);
+    if (!state) return;
+
+    // Clear any existing timers
+    this.clearTimers(button);
+
+    // If we're resuming progress, skip initial lag
+    const skipInitialLag = state.isActive && state.progress > 0;
+    
+    // Start initial lag (unless resuming)
+    state.initialLagTimer = setTimeout(() => {
+      this.startProgress(button);
+    }, skipInitialLag ? 0 : INITIAL_HOVER_LAG);
+  }
+
+  onMouseLeave(button) {
+    const state = this.hoverStates.get(button);
+    if (!state) return;
+
+    // Clear initial lag timer
+    if (state.initialLagTimer) {
+      clearTimeout(state.initialLagTimer);
+      state.initialLagTimer = null;
+    }
+
+    // Clear progress timer
+    if (state.progressTimer) {
+      clearInterval(state.progressTimer);
+      state.progressTimer = null;
+    }
+
+    // Start forget timer
+    if (state.isActive && state.progress > 0) {
+      state.forgetTimer = setTimeout(() => {
+        this.resetProgress(button);
+      }, HOVER_FORGET_TIME);
+    } else {
+      this.resetProgress(button);
+    }
+  }
+
+  startProgress(button) {
+    const state = this.hoverStates.get(button);
+    if (!state) return;
+
+    state.isActive = true;
+    state.crown.classList.add('active');
+    button.classList.add('hover-active');
+
+    // Calculate start time based on current progress
+    const startTime = Date.now() - (state.progress / 100) * HOVER_TIME_TO_CLICK;
+    
+    // Use requestAnimationFrame for smooth animation
+    const animate = () => {
+      if (!state.isActive) return; // Stop if deactivated
+      
+      const elapsed = Date.now() - startTime;
+      state.progress = Math.min((elapsed / HOVER_TIME_TO_CLICK) * 100, 100);
+      
+      if (state.progress >= 100) {
+        this.triggerClick(button);
+        this.resetProgress(button);
+        return;
+      }
+
+      // Create SVG arc for smooth progress animation
+      this.drawProgressArc(state.ring, state.progress);
+      
+      // Debug log
+      console.log(`Progress: ${state.progress.toFixed(1)}%`);
+      
+      // Continue animation
+      state.animationFrame = requestAnimationFrame(animate);
+    };
+    
+    // Start animation
+    state.animationFrame = requestAnimationFrame(animate);
+  }
+
+  drawProgressArc(ringElement, progress) {
+    const parent = ringElement.parentElement;
+    const size = parseInt(parent.style.width) || 50;
+    const center = size / 2;
+    const radius = center - 12; // 12px margin for thick border
+    const strokeWidth = 24; // 4x thicker than before
+    
+    // Calculate end angle (0 to 360 degrees)
+    const endAngle = (progress / 100) * 360;
+    
+    // Convert to radians
+    const startAngleRad = -Math.PI / 2; // Start from top (-90 degrees)
+    const endAngleRad = (endAngle - 90) * Math.PI / 180;
+    
+    // Calculate arc path
+    const x1 = center + radius * Math.cos(startAngleRad);
+    const y1 = center + radius * Math.sin(startAngleRad);
+    const x2 = center + radius * Math.cos(endAngleRad);
+    const y2 = center + radius * Math.sin(endAngleRad);
+    
+    // Large arc flag
+    const largeArcFlag = endAngle > 180 ? 1 : 0;
+    
+    // Create SVG path
+    const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
+    
+    // Create or update SVG
+    let svg = ringElement.querySelector('svg');
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', size);
+      svg.setAttribute('height', size);
+      svg.style.position = 'absolute';
+      svg.style.top = '0';
+      svg.style.left = '0';
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#ff4444');
+      path.setAttribute('stroke-width', strokeWidth);
+      path.setAttribute('stroke-linecap', 'round');
+      
+      svg.appendChild(path);
+      ringElement.appendChild(svg);
+    }
+    
+    // Update path
+    const path = svg.querySelector('path');
+    path.setAttribute('d', pathData);
+  }
+
+  triggerClick(button) {
+    // Trigger the button click
+    button.click();
+  }
+
+  resetProgress(button) {
+    const state = this.hoverStates.get(button);
+    if (!state) return;
+
+    this.clearTimers(button);
+    
+    state.progress = 0;
+    state.isActive = false;
+    state.crown.classList.remove('active');
+    button.classList.remove('hover-active');
+    
+    // Clear SVG animation
+    const svg = state.ring.querySelector('svg');
+    if (svg) {
+      svg.remove();
+    }
+  }
+
+  clearTimers(button) {
+    const state = this.hoverStates.get(button);
+    if (!state) return;
+
+    if (state.initialLagTimer) {
+      clearTimeout(state.initialLagTimer);
+      state.initialLagTimer = null;
+    }
+    if (state.progressTimer) {
+      clearInterval(state.progressTimer);
+      state.progressTimer = null;
+    }
+    if (state.animationFrame) {
+      cancelAnimationFrame(state.animationFrame);
+      state.animationFrame = null;
+    }
+    if (state.forgetTimer) {
+      clearTimeout(state.forgetTimer);
+      state.forgetTimer = null;
+    }
+  }
+
+  // Initialize all existing buttons
+  initializeAllButtons() {
+    // Setup existing buttons
+    const existingButtons = [
+      document.getElementById('prev-btn'),
+      document.getElementById('next-btn'),
+      document.getElementById('restart-btn'),
+      document.getElementById('download-results-btn'),
+      document.getElementById('prompt-btn')
+    ];
+
+    existingButtons.forEach(btn => {
+      if (btn) {
+        this.setupButton(btn);
+        setTimeout(() => this.updateCrownSize(btn), 100);
+      }
+    });
+
+    console.log('Hover system initialized for', existingButtons.filter(b => b).length, 'buttons');
+  }
+}
+
+// Initialize hover system
+const hoverSystem = new HoverCrownSystem();
+
 const state = {
   currentIndex: 0,
   selections: Array.from({ length: quizData.length }, () => null),
@@ -64,6 +337,14 @@ function renderQuestion() {
     promptBtn.onclick = () => {
       speakNow(question.prompt.caption);
     };
+
+    // Setup hover crown for prompt button
+    hoverSystem.setupButton(promptBtn);
+    
+    // Update crown size after button is rendered
+    setTimeout(() => {
+      hoverSystem.updateCrownSize(promptBtn);
+    }, 100);
   }
 
   // Clear previous choices
@@ -114,8 +395,16 @@ function renderQuestion() {
       speakNow(caption);
       onChoose(idx);
     });
+
+    // Setup hover crown for choice button
+    hoverSystem.setupButton(btn);
     
     choicesEl.appendChild(btn);
+    
+    // Update crown size after button is added to DOM
+    setTimeout(() => {
+      hoverSystem.updateCrownSize(btn);
+    }, 100);
   });
 }
 
@@ -180,10 +469,17 @@ restartBtn.addEventListener("click", restart);
 prevBtn.addEventListener("click", prevQuestion);
 nextBtn.addEventListener("click", nextQuestion);
 
+// Setup hover crowns for navigation buttons
+hoverSystem.setupButton(restartBtn);
+hoverSystem.setupButton(prevBtn);
+hoverSystem.setupButton(nextBtn);
+
 // Add event listener for download results button
 const downloadResultsBtn = document.getElementById("download-results-btn");
 if (downloadResultsBtn) {
   downloadResultsBtn.addEventListener("click", downloadResults);
+  // Setup hover crown for download button
+  hoverSystem.setupButton(downloadResultsBtn);
 }
 
 // Keyboard shortcuts: 1/2/3 to select, Enter to continue, Arrow keys to navigate
@@ -496,6 +792,11 @@ async function loadLocalData() {
     renderQuestion();
     preloadForIndex(0);
     preloadForIndex(1);
+    
+    // Initialize hover system after quiz is loaded
+    setTimeout(() => {
+      hoverSystem.initializeAllButtons();
+    }, 500);
     
           console.log('✅ Datos del quiz cargados desde archivo local');
     } catch (error) {

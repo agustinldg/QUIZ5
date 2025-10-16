@@ -9,6 +9,7 @@
   --success: #51cf66;
   --warning: #ffd43b;
   --tile-size: clamp(160px, 30vw, 300px);
+  --hover-ring-color: #ff4444;
 }
 
 * { box-sizing: border-box; }
@@ -890,6 +891,43 @@ align-items: center;
     grid-template-columns: 1fr;
     gap: 18px;
   }
+}
+
+/* Hover Crown Styles */
+.hover-crown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hover-crown.active {
+  opacity: 1;
+}
+
+.hover-crown-ring {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Button hover states */
+.btn.hover-active,
+.choice-btn.hover-active,
+#prompt-btn.hover-active {
+  position: relative;
+  overflow: visible;
+}
+
+/* Ensure buttons have relative positioning for crown overlay */
+.btn,
+.choice-btn,
+#prompt-btn {
+  position: relative;
 }
 
 

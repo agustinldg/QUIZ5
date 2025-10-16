@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Image Quiz with Captions
+ * QUIZ5 - Image Quiz with Captions
  * - 10 questions with descriptive captions
  * - Each question has: prompt image, 3 answer images (one correct)
  * - Click images to hear their captions via speech synthesis
@@ -713,8 +713,8 @@ async function downloadResults() {
     doc.setProperties({
       title: 'Resultados del Quiz',
       subject: 'Quiz de Imágenes',
-      author: 'Quiz App',
-      creator: 'Quiz App'
+      author: 'QUIZ5',
+      creator: 'QUIZ5'
     });
     
     // Add title

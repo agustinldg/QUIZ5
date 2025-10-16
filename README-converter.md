@@ -1,4 +1,4 @@
-# Quiz Data Converter
+# QUIZ5 - Quiz Data Converter
 
 This Python script converts your `quiz-data.json` file (with image URLs) to `quiz-data-base64.json` (with embedded base64 images).
 
@@ -60,7 +60,7 @@ The script creates a new `quiz-data-base64.json` file with:
 ## Example Output
 
 ```
-🔄 Quiz Data Converter: URL to Base64
+🔄 QUIZ5 - Quiz Data Converter: URL to Base64
 ==================================================
 Loading quiz data from quiz-data.json...
 Found 10 questions to convert

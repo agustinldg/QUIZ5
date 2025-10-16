@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quiz Data Converter: Converts quiz-data.json to quiz-data-base64.json
+QUIZ5 - Quiz Data Converter: Converts quiz-data.json to quiz-data-base64.json
 Downloads images from URLs and converts them to base64 strings
 """
 
@@ -119,7 +119,7 @@ def main():
     input_file = "quiz-data.json"
     output_file = "quiz-data-base64.json"
     
-    print("🔄 Quiz Data Converter: URL to Base64")
+    print("🔄 QUIZ5 - Quiz Data Converter: URL to Base64")
     print("=" * 50)
     
     # Check if input file exists

@@ -84,7 +84,7 @@ function generateQuizJSON() {
     
     // Create the final JSON structure
     const quizData = {
-      quizTitle: "Quiz App",
+      quizTitle: "QUIZ5",
       totalQuestions: questions.length,
       questions: questions,
       metadata: {

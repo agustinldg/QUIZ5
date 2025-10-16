@@ -91,13 +91,18 @@ class HoverCrownSystem {
     // Clear any existing timers
     this.clearTimers(button);
 
-    // If we're resuming progress, skip initial lag
-    const skipInitialLag = state.isActive && state.progress > 0;
+    // If we're resuming progress (has progress and forget timer was running), skip initial lag
+    const isResuming = state.progress > 0 && !state.isActive;
     
-    // Start initial lag (unless resuming)
-    state.initialLagTimer = setTimeout(() => {
+    if (isResuming) {
+      // Resume immediately without initial lag
       this.startProgress(button);
-    }, skipInitialLag ? 0 : INITIAL_HOVER_LAG);
+    } else {
+      // Start initial lag for new hover
+      state.initialLagTimer = setTimeout(() => {
+        this.startProgress(button);
+      }, INITIAL_HOVER_LAG);
+    }
   }
 
   onMouseLeave(button) {
@@ -137,10 +142,10 @@ class HoverCrownSystem {
     state.crown.classList.add('active');
     button.classList.add('hover-active');
 
-    // Store the time when progress started/resumed
-    if (!state.progressStartTime) {
-      state.progressStartTime = Date.now();
-    }
+    // Calculate progress start time based on current progress
+    const currentProgress = state.progress;
+    const elapsedTimeForCurrentProgress = (currentProgress / 100) * HOVER_TIME_TO_CLICK;
+    state.progressStartTime = Date.now() - elapsedTimeForCurrentProgress;
     
     // Use requestAnimationFrame for smooth animation
     const animate = () => {

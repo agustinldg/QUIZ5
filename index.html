@@ -6,7 +6,7 @@
   <title>QUIZ5</title>
   <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="preconnect" href="https://picsum.photos" />
-      <link rel="stylesheet" href="styles.css?v=32">
+      <link rel="stylesheet" href="styles.css?v=33">
 </head>
 <body>
   <main class="app" aria-live="polite">
@@ -19,21 +19,17 @@
           <span id="progress-text" class="progress__text">Question 1 / 10</span>
         </div>
       </div>
+      <div class="question-container">
+        <h2 id="prompt-label" class="sr-only">Question prompt</h2>
+        <button id="prompt-btn" type="button" aria-label="Question image and caption">
+          <img id="prompt-image" alt="Question image" />
+          <div id="prompt-caption" class="caption">Question caption</div>
+        </button>
+      </div>
       <button id="next-btn" class="btn" aria-label="Next"></button>
     </header>
 
     <section class="quiz" id="quiz" aria-labelledby="prompt-label">
-      <!-- Question at the top -->
-      <div class="question-section">
-        <div class="question-container">
-          <h2 id="prompt-label" class="sr-only">Question prompt</h2>
-          <button id="prompt-btn" type="button" aria-label="Question image and caption">
-            <img id="prompt-image" alt="Question image" />
-            <div id="prompt-caption" class="caption">Question caption</div>
-          </button>
-        </div>
-      </div>
-      
       <!-- Answers at the bottom -->
       <div class="answers-section">
         <div class="choices" role="list" aria-label="Choose the matching image">
@@ -54,7 +50,7 @@
   </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
 </body>
 </html>
 

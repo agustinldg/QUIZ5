@@ -6,13 +6,13 @@
   <title>QUIZ5</title>
   <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="preconnect" href="https://picsum.photos" />
-      <link rel="stylesheet" href="styles.css?v=30">
+      <link rel="stylesheet" href="styles.css?v=31">
 </head>
 <body>
   <main class="app" aria-live="polite">
     <header class="header">
       <button id="prev-btn" class="btn" aria-label="Previous"></button>
-      <div style="flex:1 1 0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; max-width:100vw;">
+      <div class="header-content">
         <h1 class="title">QUIZ5</h1>
         <div class="progress" aria-label="progress">
           <div id="progress-bar" class="progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"></div>
@@ -23,23 +23,23 @@
     </header>
 
     <section class="quiz" id="quiz" aria-labelledby="prompt-label">
-      <div class="quiz-flex">
-        <div class="prompt-col">
-          <div class="prompt">
-            <h2 id="prompt-label" class="sr-only">Question prompt</h2>
-            <button id="prompt-btn" type="button" aria-label="Question image and caption">
-              <img id="prompt-image" alt="Question image" />
-              <div id="prompt-caption" class="caption">Question caption</div>
-            </button>
-          </div>
-        </div>
-        <div class="choices-col">
-          <div class="choices" role="list" aria-label="Choose the matching image">
-            <!-- Buttons injected by JS -->
-          </div>
+      <!-- Question at the top -->
+      <div class="question-section">
+        <div class="question-container">
+          <h2 id="prompt-label" class="sr-only">Question prompt</h2>
+          <button id="prompt-btn" type="button" aria-label="Question image and caption">
+            <img id="prompt-image" alt="Question image" />
+            <div id="prompt-caption" class="caption">Question caption</div>
+          </button>
         </div>
       </div>
-      <!-- nav removed, arrows are now in header -->
+      
+      <!-- Answers at the bottom -->
+      <div class="answers-section">
+        <div class="choices" role="list" aria-label="Choose the matching image">
+          <!-- Buttons injected by JS -->
+        </div>
+      </div>
     </section>
 
     <section id="results" class="results" hidden>
@@ -54,7 +54,7 @@
   </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
 </body>
 </html>
 
